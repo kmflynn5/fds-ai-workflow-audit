@@ -21,8 +21,7 @@ uv sync
 # Run the audit on an example workflow
 uv run python run_audit.py workflow.example.yml
 
-# View the Evidence report
-cp output/*.csv evidence/sources/audit_results/
+# View the Evidence report (CSVs are auto-synced to evidence/sources/)
 cd evidence && npm install && npm run sources && npm run dev
 ```
 
