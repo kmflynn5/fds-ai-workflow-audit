@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import csv
 import json
-import sys
 from dataclasses import asdict
 from pathlib import Path
 
@@ -23,7 +22,10 @@ def _write_csv(path: Path, fieldnames: list[str], rows: list[dict]) -> None:
         writer.writerows(rows)
 
 
-def run_audit(workflow_path: str | Path, output_dir: str | Path = "output") -> dict:
+EVIDENCE_SOURCES_DIR = Path(__file__).parent / "evidence" / "sources" / "audit_results"
+
+
+def run_audit(workflow_path: str | Path, output_dir: str | Path = "output", *, sync_evidence: bool = True) -> dict:
     """Run the full audit pipeline and return results as a dict."""
     output_dir = Path(output_dir)
     output_dir.mkdir(exist_ok=True)
@@ -39,16 +41,21 @@ def run_audit(workflow_path: str | Path, output_dir: str | Path = "output") -> d
     # Build results dict
     results = build_results(config, risk_scores, failures, checkpoints, costs)
 
-    # Write outputs
+    # Write outputs to output dir and optionally Evidence sources
+    csv_dirs = [output_dir]
+    if sync_evidence and EVIDENCE_SOURCES_DIR.is_dir():
+        csv_dirs.append(EVIDENCE_SOURCES_DIR)
+
     write_json(output_dir, results)
-    write_risk_scores_csv(output_dir, risk_scores)
-    write_failure_matrix_csv(output_dir, failures)
-    write_checkpoints_csv(output_dir, checkpoints)
-    write_cost_breakdown_csv(output_dir, costs)
-    write_growth_projections_csv(output_dir, costs)
-    write_workflow_steps_csv(output_dir, config)
-    write_executive_summary_csv(output_dir, config, risk_scores, failures, checkpoints, costs)
-    write_cost_optimizations_csv(output_dir, costs)
+    for d in csv_dirs:
+        write_risk_scores_csv(d, risk_scores)
+        write_failure_matrix_csv(d, failures)
+        write_checkpoints_csv(d, checkpoints)
+        write_cost_breakdown_csv(d, costs)
+        write_growth_projections_csv(d, costs)
+        write_workflow_steps_csv(d, config)
+        write_executive_summary_csv(d, config, risk_scores, failures, checkpoints, costs)
+        write_cost_optimizations_csv(d, costs)
 
     return results
 
@@ -220,9 +227,16 @@ def write_cost_optimizations_csv(output_dir: Path, costs) -> None:
 
 
 def main() -> None:
-    workflow_path = sys.argv[1] if len(sys.argv) > 1 else "workflow.example.yml"
-    output_dir = sys.argv[2] if len(sys.argv) > 2 else "output"
-    results = run_audit(workflow_path, output_dir)
+    import argparse
+
+    parser = argparse.ArgumentParser(description="AI workflow risk and quality assessment tool")
+    parser.add_argument("workflow", nargs="?", default="workflow.example.yml", help="Path to workflow YAML file")
+    parser.add_argument("-o", "--output", default="output", help="Output directory (default: output)")
+    parser.add_argument("--no-evidence", action="store_true", help="Skip syncing CSVs to Evidence sources directory")
+    args = parser.parse_args()
+
+    sync_evidence = not args.no_evidence
+    results = run_audit(args.workflow, args.output, sync_evidence=sync_evidence)
     summary = results["executive_summary"]
     print(f"Audit complete: {summary['workflow_name']}")
     print(f"  Steps: {summary['total_steps']} | High-risk: {summary['high_risk_steps']}")
@@ -232,7 +246,9 @@ def main() -> None:
     print(f"  High-risk failure modes: {summary['failure_modes_high']}")
     print(f"  Monthly cost: ${summary['monthly_cost']:.2f} | Annual: ${summary['annual_cost']:.2f}")
     print(f"  Cost per request: ${summary['cost_per_request']:.4f}")
-    print(f"  Results written to {output_dir}/")
+    print(f"  Results written to {args.output}/")
+    if sync_evidence and EVIDENCE_SOURCES_DIR.is_dir():
+        print(f"  Evidence sources synced to {EVIDENCE_SOURCES_DIR}/")
 
 
 if __name__ == "__main__":
