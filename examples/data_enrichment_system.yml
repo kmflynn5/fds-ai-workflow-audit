@@ -1,0 +1,82 @@
+workflow:
+  name: "CRM Data Enrichment System"
+  description: "Automated pipeline to enrich CRM records with firmographic data from external sources"
+  owner: "Revenue Operations"
+  environment: "production"
+
+steps:
+  - id: crm_record_intake
+    name: "Pull CRM records"
+    type: data_lookup
+    description: "Fetch new or recently updated CRM records that need enrichment"
+    tools:
+      - "salesforce_api"
+    data_sensitivity: medium
+
+  - id: firmographic_lookup
+    name: "Look up firmographic data"
+    type: external_api
+    description: "Retrieve company-level data from Clearbit and LinkedIn enrichment APIs"
+    tools:
+      - "clearbit_api"
+      - "linkedin_api"
+    data_sensitivity: medium
+
+  - id: ai_enrichment
+    name: "Generate enriched summaries"
+    type: ai_generation
+    description: "Generate enriched firmographic summaries from raw API data"
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 1500
+    estimated_tokens_out: 800
+    depends_on: [crm_record_intake, firmographic_lookup]
+    error_consequence: "Incorrect company data written to CRM"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: validation
+    name: "Validate enrichment"
+    type: ai_classification
+    description: "Cross-validate enriched data against source records for accuracy"
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 2000
+    estimated_tokens_out: 100
+    depends_on: [ai_enrichment]
+    reversible: true
+    data_sensitivity: medium
+
+  - id: crm_update
+    name: "Write enriched data to CRM"
+    type: ai_action
+    description: "Persist validated enrichment data back to Salesforce CRM records"
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 500
+    estimated_tokens_out: 200
+    depends_on: [validation]
+    tools:
+      - "salesforce_api"
+    reversible: false
+    data_sensitivity: medium
+
+volume:
+  requests_per_day: 500
+  peak_multiplier: 1.5
+  growth_rate_monthly_pct: 15.0
+
+risk:
+  regulatory_environment: "standard"
+  customer_facing: false
+  financial_impact_per_error: 25.0
+  brand_risk: "low"
+  data_classification: "internal"
+
+infrastructure:
+  snowflake:
+    enabled: true
+    credit_price: 3.00
+    estimated_credits_per_day: 3.0
+  other_services:
+    - name: "Salesforce CRM"
+      monthly_cost: 0.0
+    - name: "Clearbit Enrichment API"
+      monthly_cost: 200.0

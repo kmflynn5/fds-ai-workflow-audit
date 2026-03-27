@@ -1,0 +1,89 @@
+workflow:
+  name: "Marketing Content Generation Pipeline"
+  description: "End-to-end AI pipeline for researching, drafting, reviewing, and publishing marketing content"
+  owner: "Marketing Team"
+  environment: "production"
+
+steps:
+  - id: brief_intake
+    name: "Ingest content brief"
+    type: input
+    description: "Marketing team submits a content brief including topic, audience, and goals"
+    data_sensitivity: low
+
+  - id: research
+    name: "Research topic"
+    type: ai_action
+    description: "Research the topic and gather source material from the web"
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 2000
+    estimated_tokens_out: 1000
+    tools:
+      - "web_search_api"
+    reversible: true
+
+  - id: draft_generation
+    name: "Generate first draft"
+    type: ai_generation
+    description: "Generate a full first draft based on the brief and researched material"
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 3000
+    estimated_tokens_out: 2000
+    error_consequence: "Off-brand content published"
+    reversible: true
+    depends_on: [research]
+
+  - id: tone_review
+    name: "Check brand voice alignment"
+    type: ai_classification
+    description: "Evaluate whether the draft matches brand voice guidelines"
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 2500
+    estimated_tokens_out: 200
+    reversible: true
+    depends_on: [draft_generation]
+
+  - id: edit_and_polish
+    name: "Edit and polish draft"
+    type: ai_generation
+    description: "Refine the draft based on tone review feedback"
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 3000
+    estimated_tokens_out: 2000
+    reversible: true
+    depends_on: [tone_review]
+    branches:
+      approve: publish
+      revise: draft_generation
+
+  - id: publish
+    name: "Publish to CMS"
+    type: ai_action
+    description: "Format and publish the final content to the content management system"
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 500
+    estimated_tokens_out: 100
+    tools:
+      - "cms_api"
+    reversible: false
+    customer_facing: true
+    depends_on: [edit_and_polish]
+
+volume:
+  requests_per_day: 50
+  peak_multiplier: 2.0
+  growth_rate_monthly_pct: 5.0
+
+risk:
+  regulatory_environment: "standard"
+  customer_facing: true
+  financial_impact_per_error: 200.0
+  brand_risk: "high"
+  data_classification: "public"
+
+infrastructure:
+  snowflake:
+    enabled: false
+  other_services:
+    - name: "WordPress Hosting"
+      monthly_cost: 50.0

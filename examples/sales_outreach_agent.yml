@@ -1,0 +1,101 @@
+workflow:
+  name: "AI-Powered Sales Outreach Agent"
+  description: "Personalized B2B sales email generation, compliance checking, and delivery pipeline"
+  owner: "Sales Development Team"
+  environment: "production"
+
+steps:
+  - id: prospect_research
+    name: "Pull prospect data"
+    type: data_lookup
+    description: "Fetch prospect and company data from the CRM"
+    tools:
+      - "crm_api"
+    data_sensitivity: medium
+
+  - id: company_analysis
+    name: "Analyze prospect company"
+    type: ai_generation
+    description: "Analyze the prospect's company, recent news, and strategic priorities"
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 2000
+    estimated_tokens_out: 1000
+    depends_on: [prospect_research]
+    reversible: true
+    data_sensitivity: medium
+
+  - id: personalization
+    name: "Generate personalization hooks"
+    type: ai_generation
+    description: "Identify compelling personalization angles based on company analysis"
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 1500
+    estimated_tokens_out: 500
+    depends_on: [company_analysis]
+    error_consequence: "Generic or irrelevant personalization"
+    reversible: true
+
+  - id: email_draft
+    name: "Draft personalized email"
+    type: ai_generation
+    description: "Compose a personalized outreach email using personalization hooks"
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 2000
+    estimated_tokens_out: 800
+    depends_on: [personalization]
+    customer_facing: true
+    reversible: true
+
+  - id: compliance_check
+    name: "Compliance and tone check"
+    type: ai_classification
+    description: "Verify the email complies with CAN-SPAM regulations and has appropriate tone"
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 1000
+    estimated_tokens_out: 100
+    depends_on: [email_draft]
+    reversible: true
+    branches:
+      pass: send_email
+      fail: email_draft
+
+  - id: send_email
+    name: "Send outreach email"
+    type: ai_action
+    description: "Deliver the approved email via the outreach platform and update CRM"
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 300
+    estimated_tokens_out: 100
+    depends_on: [compliance_check]
+    tools:
+      - "email_api"
+      - "crm_api"
+      - "linkedin_api"
+    reversible: false
+    customer_facing: true
+    error_consequence: "Wrong email sent to prospect"
+    data_sensitivity: medium
+
+  - id: log_activity
+    name: "Log outreach activity"
+    type: ai_action
+    description: "Record outreach activity, email content, and send timestamp in CRM"
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 400
+    estimated_tokens_out: 150
+    depends_on: [send_email]
+    tools:
+      - "crm_api"
+    reversible: true
+
+volume:
+  requests_per_day: 200
+  peak_multiplier: 2.0
+  growth_rate_monthly_pct: 20.0
+
+risk:
+  regulatory_environment: "standard"
+  customer_facing: true
+  financial_impact_per_error: 100.0
+  brand_risk: "high"
+  data_classification: "PII"
