@@ -1,0 +1,70 @@
+workflow:
+  name: "Internal Knowledge Q&A System"
+  description: "RAG-based Q&A assistant for employees to query internal documentation and policies"
+  owner: "Internal Tools Team"
+  environment: "production"
+
+steps:
+  - id: question_intake
+    name: "Receive employee question"
+    type: input
+    description: "Employee submits a natural language question through the internal portal"
+    data_sensitivity: low
+
+  - id: document_retrieval
+    name: "Retrieve relevant documents"
+    type: data_lookup
+    description: "Query the vector store to find the most relevant internal documents"
+    tools:
+      - "vector_db_api"
+    data_sensitivity: low
+
+  - id: context_assembly
+    name: "Assemble context"
+    type: ai_action
+    description: "Select and assemble the most relevant context passages from retrieved documents"
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 3000
+    estimated_tokens_out: 1500
+    depends_on: [document_retrieval]
+    error_consequence: "Irrelevant context selected, leading to wrong answer"
+    reversible: true
+
+  - id: answer_generation
+    name: "Generate answer"
+    type: ai_generation
+    description: "Generate a factual, grounded answer based on assembled context"
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 4000
+    estimated_tokens_out: 1000
+    depends_on: [context_assembly]
+    error_consequence: "Plausible but incorrect answer — silent failure"
+    customer_facing: false
+    reversible: true
+
+  - id: feedback_capture
+    name: "Capture user feedback"
+    type: input
+    description: "User rates the answer quality (thumbs up/down) to improve future retrieval"
+    depends_on: [answer_generation]
+
+volume:
+  requests_per_day: 1000
+  peak_multiplier: 2.0
+  growth_rate_monthly_pct: 8.0
+
+risk:
+  regulatory_environment: "standard"
+  customer_facing: false
+  financial_impact_per_error: 10.0
+  brand_risk: "low"
+  data_classification: "internal"
+
+infrastructure:
+  snowflake:
+    enabled: true
+    credit_price: 3.00
+    estimated_credits_per_day: 2.0
+  other_services:
+    - name: "Pinecone Vector Database"
+      monthly_cost: 70.0
