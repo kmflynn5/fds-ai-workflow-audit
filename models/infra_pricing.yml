@@ -1,0 +1,5 @@
+snowflake:
+  default_credit_price: 3.00
+
+duckdb:
+  estimated_monthly_hosting: 0
