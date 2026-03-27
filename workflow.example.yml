@@ -1,0 +1,114 @@
+workflow:
+  name: "Tier 1 Customer Support Agent"
+  description: "AI agent handling password resets, order status, and return initiations with human escalation on negative sentiment"
+  owner: "Customer Experience Team"
+  environment: "production"
+
+steps:
+  - id: intake
+    name: "Receive customer message"
+    type: input
+    description: "Customer submits a support request via chat widget"
+    data_sensitivity: low
+
+  - id: classify
+    name: "Classify intent"
+    type: ai_classification
+    description: "Determine if request is password reset, order status, return, or other"
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 500
+    estimated_tokens_out: 50
+    error_consequence: "Misrouted ticket, delayed resolution"
+    reversible: true
+
+  - id: sentiment
+    name: "Score customer sentiment"
+    type: ai_classification
+    description: "Determine if customer is frustrated, neutral, or positive"
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 800
+    estimated_tokens_out: 100
+    error_consequence: "Missed escalation of angry customer"
+    reversible: true
+
+  - id: escalation_check
+    name: "Escalation decision"
+    type: ai_classification
+    description: "If sentiment is negative and confidence > 0.8, escalate to human"
+    depends_on: [classify, sentiment]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 300
+    estimated_tokens_out: 50
+    error_consequence: "False negative: angry customer gets bot response. False positive: unnecessary human escalation"
+    reversible: true
+    branches:
+      escalate: human_handoff
+      continue: resolve
+
+  - id: resolve
+    name: "Execute resolution"
+    type: ai_action
+    description: "Handle the classified request: reset password via API, look up order status, or initiate return"
+    depends_on: [escalation_check]
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 1500
+    estimated_tokens_out: 500
+    tools:
+      - "password_reset_api"
+      - "order_status_api"
+      - "return_initiation_api"
+    error_consequence: "Wrong action taken on customer account"
+    reversible: false
+    data_sensitivity: high
+
+  - id: respond
+    name: "Generate customer response"
+    type: ai_generation
+    description: "Draft and send response to customer"
+    depends_on: [resolve]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 800
+    estimated_tokens_out: 300
+    error_consequence: "Incorrect or inappropriate response to customer"
+    reversible: false
+    customer_facing: true
+
+  - id: log
+    name: "Log interaction"
+    type: ai_action
+    description: "Log ticket, resolution, and escalation reason code to CRM"
+    depends_on: [respond]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 500
+    estimated_tokens_out: 200
+    error_consequence: "Missing or incorrect CRM record"
+    reversible: true
+
+  - id: human_handoff
+    name: "Escalate to human agent"
+    type: human_review
+    description: "Transfer to human with full context summary"
+    depends_on: [escalation_check]
+
+volume:
+  requests_per_day: 5000
+  peak_multiplier: 3
+  growth_rate_monthly_pct: 10
+
+risk:
+  regulatory_environment: "standard"
+  customer_facing: true
+  financial_impact_per_error: 50
+  brand_risk: "medium"
+  data_classification: "PII"
+
+infrastructure:
+  snowflake:
+    enabled: true
+    credit_price: 3.00
+    estimated_credits_per_day: 5
+  other_services:
+    - name: "CRM API (Salesforce)"
+      monthly_cost: 0
+    - name: "Resend (email notifications)"
+      monthly_cost: 20
