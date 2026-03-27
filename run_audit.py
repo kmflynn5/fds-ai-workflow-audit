@@ -206,6 +206,16 @@ def write_cost_optimizations_csv(output_dir: Path, costs) -> None:
     """Write cost_optimizations.csv."""
     fieldnames = ["step_id", "step_name", "suggestion", "estimated_monthly_savings", "category"]
     rows = [asdict(opt) for opt in costs.optimizations]
+    if not rows:
+        rows = [
+            {
+                "step_id": "-",
+                "step_name": "-",
+                "suggestion": "No optimizations identified",
+                "estimated_monthly_savings": 0,
+                "category": "-",
+            }
+        ]
     _write_csv(output_dir / "cost_optimizations.csv", fieldnames, rows)
 
 
