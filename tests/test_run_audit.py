@@ -6,7 +6,7 @@ from pathlib import Path
 from run_audit import run_audit
 
 PROJECT_ROOT = Path(__file__).parent.parent
-EXAMPLE_WORKFLOW = PROJECT_ROOT / "workflow.example.yml"
+EXAMPLE_WORKFLOW = PROJECT_ROOT / "workflows" / "workflow.example.yml"
 
 
 def test_full_pipeline(tmp_path):

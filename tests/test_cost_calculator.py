@@ -128,7 +128,7 @@ def test_growth_projection() -> None:
 
 def test_full_cost_report() -> None:
     """Run calculate_costs on the example workflow and verify non-zero totals."""
-    config = parse_workflow(PROJECT_ROOT / "workflow.example.yml")
+    config = parse_workflow(PROJECT_ROOT / "workflows" / "workflow.example.yml")
     report = calculate_costs(config)
 
     assert len(report.step_costs) > 0
@@ -141,7 +141,7 @@ def test_full_cost_report() -> None:
 
 def test_optimization_suggestions() -> None:
     """Verify suggest_optimizations runs and any suggestions have positive savings."""
-    config = parse_workflow(PROJECT_ROOT / "workflow.example.yml")
+    config = parse_workflow(PROJECT_ROOT / "workflows" / "workflow.example.yml")
     pricing = load_model_pricing()
 
     # Build step_costs the same way calculate_costs does

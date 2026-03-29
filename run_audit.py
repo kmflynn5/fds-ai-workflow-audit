@@ -230,25 +230,73 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description="AI workflow risk and quality assessment tool")
-    parser.add_argument("workflow", nargs="?", default="workflow.example.yml", help="Path to workflow YAML file")
+    parser.add_argument(
+        "workflow", nargs="?", default="workflows/workflow.example.yml", help="Path to workflow YAML file"
+    )
     parser.add_argument("-o", "--output", default="output", help="Output directory (default: output)")
     parser.add_argument("--no-evidence", action="store_true", help="Skip syncing CSVs to Evidence sources directory")
     args = parser.parse_args()
 
     sync_evidence = not args.no_evidence
     results = run_audit(args.workflow, args.output, sync_evidence=sync_evidence)
-    summary = results["executive_summary"]
-    print(f"Audit complete: {summary['workflow_name']}")
-    print(f"  Steps: {summary['total_steps']} | High-risk: {summary['high_risk_steps']}")
-    print(
-        f"  Checkpoints required: {summary['checkpoints_required']} | recommended: {summary['checkpoints_recommended']}"
-    )
-    print(f"  High-risk failure modes: {summary['failure_modes_high']}")
-    print(f"  Monthly cost: ${summary['monthly_cost']:.2f} | Annual: ${summary['annual_cost']:.2f}")
-    print(f"  Cost per request: ${summary['cost_per_request']:.4f}")
-    print(f"  Results written to {args.output}/")
+    print_summary(results, args.output, sync_evidence)
+
+
+def print_summary(results: dict, output_dir: str, sync_evidence: bool) -> None:
+    """Print a human-readable audit summary to the terminal."""
+    s = results["executive_summary"]
+    print(f"\n{'=' * 60}")
+    print(f"  AUDIT: {s['workflow_name']}")
+    print(f"{'=' * 60}")
+    print(f"  Steps: {s['total_steps']}  |  High-risk failure modes: {s['failure_modes_high']}")
+    monthly = f"${s['monthly_cost']:.2f}"
+    annual = f"${s['annual_cost']:.2f}"
+    per_req = f"${s['cost_per_request']:.4f}"
+    print(f"  Monthly cost: {monthly}  |  Annual: {annual}  |  Per request: {per_req}")
+
+    # Checkpoints
+    checkpoints = results["checkpoints"]
+    required = [cp for cp in checkpoints if cp["priority"] == "required"]
+    recommended = [cp for cp in checkpoints if cp["priority"] == "recommended"]
+    if required or recommended:
+        print(f"\n  CHECKPOINTS ({len(required)} required, {len(recommended)} recommended)")
+        print(f"  {'-' * 56}")
+        for cp in required + recommended:
+            tag = "REQUIRED" if cp["priority"] == "required" else "recommended"
+            reviews = f"  ~{cp['estimated_daily_reviews']}/day" if cp.get("estimated_daily_reviews") else ""
+            print(f"  [{tag:>11}]  {cp['step_name']}: {cp['checkpoint_type']}{reviews}")
+
+    # High-risk failure modes
+    high_failures = [fm for fm in results["failure_mappings"] if fm["risk_level"] == "high"]
+    if high_failures:
+        print(f"\n  HIGH-RISK FAILURE MODES ({len(high_failures)})")
+        print(f"  {'-' * 56}")
+        for fm in high_failures:
+            print(f"  {fm['step_name']}: {fm['failure_type'].replace('_', ' ')}")
+            print(f"    -> {fm['mitigation']}")
+
+    # Cost optimizations
+    optimizations = results["cost_report"]["optimizations"]
+    if optimizations:
+        print(f"\n  COST OPTIMIZATIONS ({len(optimizations)})")
+        print(f"  {'-' * 56}")
+        for opt in optimizations:
+            print(f"  {opt['step_name']}: {opt['suggestion']}")
+            print(f"    -> saves ~${opt['estimated_monthly_savings']:.2f}/month")
+
+    # Top risk steps
+    risk_scores = sorted(results["risk_scores"], key=lambda r: r["composite"], reverse=True)
+    top = [r for r in risk_scores if r["composite"] >= 2.5]
+    if top:
+        print("\n  TOP RISK STEPS")
+        print(f"  {'-' * 56}")
+        for r in top[:5]:
+            print(f"  {r['composite']:.1f}  {r['step_name']}")
+
+    print(f"\n  Results written to {output_dir}/")
     if sync_evidence and EVIDENCE_SOURCES_DIR.is_dir():
-        print(f"  Evidence sources synced to {EVIDENCE_SOURCES_DIR}/")
+        print("  Evidence sources synced — run: cd evidence && npm run sources && npm run dev")
+    print()
 
 
 if __name__ == "__main__":

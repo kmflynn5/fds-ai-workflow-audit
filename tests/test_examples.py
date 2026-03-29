@@ -6,12 +6,12 @@ import pytest
 
 from run_audit import run_audit
 
-EXAMPLES_DIR = Path(__file__).parent.parent / "examples"
 PROJECT_ROOT = Path(__file__).parent.parent
+WORKFLOWS_DIR = PROJECT_ROOT / "workflows"
+EXAMPLES_DIR = PROJECT_ROOT / "examples"
 
-_example_files = sorted(EXAMPLES_DIR.glob("*.yml"))
-_all_files = [str(PROJECT_ROOT / "workflow.example.yml")] + [str(f) for f in _example_files]
-_all_ids = ["workflow.example"] + [f.stem for f in _example_files]
+_all_files = sorted(str(f) for f in [*WORKFLOWS_DIR.glob("*.yml"), *EXAMPLES_DIR.glob("*.yml")])
+_all_ids = [Path(f).stem for f in _all_files]
 
 
 @pytest.fixture(params=_all_files, ids=_all_ids)
