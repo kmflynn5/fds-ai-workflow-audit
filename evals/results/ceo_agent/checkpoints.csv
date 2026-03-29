@@ -1,0 +1,3 @@
+step_id,step_name,checkpoint_type,priority,rationale,implementation_detail,estimated_daily_reviews
+send_email,Send morning brief via Resend,post-action verification,recommended,Irreversible customer-facing output should be verified post-action,Review flagged interactions within 1 hour; prioritize by sentiment score,0
+send_email,Send morning brief via Resend,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,

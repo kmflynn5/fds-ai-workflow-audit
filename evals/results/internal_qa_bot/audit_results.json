@@ -1,0 +1,286 @@
+{
+  "workflow_name": "Tier 2B \u2014 Internal Q&A Bot",
+  "workflow_description": "Simple RAG Q&A assistant for employees to query internal documentation; no external actions, not customer-facing; all steps expected to score <= 3.0",
+  "total_steps": 4,
+  "risk_scores": [
+    {
+      "step_id": "question_intake",
+      "step_name": "Receive employee question",
+      "blast_radius": 1.0,
+      "reversibility": 1.0,
+      "frequency": 3.0,
+      "verifiability": 1.0,
+      "cascading_risk": 3.0,
+      "composite": 1.38,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "retrieve_docs",
+      "step_name": "Retrieve relevant documents",
+      "blast_radius": 2.0,
+      "reversibility": 2.0,
+      "frequency": 3.0,
+      "verifiability": 1.0,
+      "cascading_risk": 3.0,
+      "composite": 1.88,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "generate_answer",
+      "step_name": "Generate answer",
+      "blast_radius": 2.0,
+      "reversibility": 1.0,
+      "frequency": 3.0,
+      "verifiability": 4.0,
+      "cascading_risk": 2.0,
+      "composite": 1.88,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "log_query",
+      "step_name": "Log query and answer",
+      "blast_radius": 2.0,
+      "reversibility": 1.0,
+      "frequency": 3.0,
+      "verifiability": 3.0,
+      "cascading_risk": 1.0,
+      "composite": 1.62,
+      "checkpoint_level": "none"
+    }
+  ],
+  "failure_mappings": [
+    {
+      "step_id": "generate_answer",
+      "step_name": "Generate answer",
+      "failure_type": "cascading_failure",
+      "risk_level": "low",
+      "rationale": "Failure affects 1 downstream step",
+      "mitigation": "Ensure the downstream step handles missing or malformed input gracefully"
+    },
+    {
+      "step_id": "generate_answer",
+      "step_name": "Generate answer",
+      "failure_type": "context_degradation",
+      "risk_level": "low",
+      "rationale": "Short workflow; context degradation risk is minimal",
+      "mitigation": "Standard context monitoring is sufficient"
+    },
+    {
+      "step_id": "generate_answer",
+      "step_name": "Generate answer",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Generated content may appear correct but contain factual errors",
+      "mitigation": "Add automated factual-consistency checks; route edge-case outputs to human review queue"
+    },
+    {
+      "step_id": "generate_answer",
+      "step_name": "Generate answer",
+      "failure_type": "specification_drift",
+      "risk_level": "medium",
+      "rationale": "Step depth or workflow length increases specification drift risk",
+      "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "generate_answer",
+      "step_name": "Generate answer",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "high",
+      "rationale": "Generation step builds on classified/looked-up data \u2014 may confirm incorrect upstream data",
+      "mitigation": "Cross-reference generated output against raw source data; add validation gate between lookup and generation"
+    },
+    {
+      "step_id": "log_query",
+      "step_name": "Log query and answer",
+      "failure_type": "context_degradation",
+      "risk_level": "low",
+      "rationale": "Short workflow; context degradation risk is minimal",
+      "mitigation": "Standard context monitoring is sufficient"
+    },
+    {
+      "step_id": "log_query",
+      "step_name": "Log query and answer",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "log_query",
+      "step_name": "Log query and answer",
+      "failure_type": "specification_drift",
+      "risk_level": "medium",
+      "rationale": "Step depth or workflow length increases specification drift risk",
+      "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "log_query",
+      "step_name": "Log query and answer",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "medium",
+      "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
+      "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    },
+    {
+      "step_id": "question_intake",
+      "step_name": "Receive employee question",
+      "failure_type": "cascading_failure",
+      "risk_level": "medium",
+      "rationale": "Failure propagates to 3 downstream steps",
+      "mitigation": "Add output validation at this step; define a fallback branch for failure cases"
+    },
+    {
+      "step_id": "retrieve_docs",
+      "step_name": "Retrieve relevant documents",
+      "failure_type": "cascading_failure",
+      "risk_level": "medium",
+      "rationale": "Failure propagates to 2 downstream steps",
+      "mitigation": "Add output validation at this step; define a fallback branch for failure cases"
+    },
+    {
+      "step_id": "retrieve_docs",
+      "step_name": "Retrieve relevant documents",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "Step has 1 tool \u2014 minimal selection ambiguity",
+      "mitigation": "Verify the single tool is invoked with correct parameters via parameter schema validation"
+    }
+  ],
+  "checkpoints": [],
+  "cost_report": {
+    "step_costs": [
+      {
+        "step_id": "generate_answer",
+        "step_name": "Generate answer",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 3000,
+        "tokens_out_per_request": 800,
+        "cost_per_request": 0.005600000000000001,
+        "daily_cost": 1.12,
+        "monthly_cost": 33.6,
+        "annual_cost": 408.8
+      },
+      {
+        "step_id": "log_query",
+        "step_name": "Log query and answer",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 400,
+        "tokens_out_per_request": 100,
+        "cost_per_request": 0.00072,
+        "daily_cost": 0.14400000000000002,
+        "monthly_cost": 4.32,
+        "annual_cost": 52.56000000000001
+      }
+    ],
+    "total_token_daily": 1.2640000000000002,
+    "total_token_monthly": 37.92,
+    "total_token_annual": 461.36,
+    "infra_cost": {
+      "snowflake_daily": 0.0,
+      "snowflake_monthly": 0.0,
+      "other_services_monthly": 70.0,
+      "total_infra_monthly": 70.0
+    },
+    "total_monthly": 107.92,
+    "total_annual": 1301.3600000000001,
+    "cost_per_request": 0.017986666666666668,
+    "growth_projections": [
+      {
+        "month": 0,
+        "daily_volume": 200,
+        "token_monthly_cost": 37.92,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 107.92
+      },
+      {
+        "month": 1,
+        "daily_volume": 210,
+        "token_monthly_cost": 39.816,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 109.816
+      },
+      {
+        "month": 2,
+        "daily_volume": 220,
+        "token_monthly_cost": 41.8068,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 111.80680000000001
+      },
+      {
+        "month": 3,
+        "daily_volume": 231,
+        "token_monthly_cost": 43.89714000000001,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 113.89714000000001
+      },
+      {
+        "month": 4,
+        "daily_volume": 243,
+        "token_monthly_cost": 46.09199700000001,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 116.09199700000002
+      },
+      {
+        "month": 5,
+        "daily_volume": 255,
+        "token_monthly_cost": 48.396596850000016,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 118.39659685000001
+      },
+      {
+        "month": 6,
+        "daily_volume": 268,
+        "token_monthly_cost": 50.816426692500016,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 120.81642669250002
+      },
+      {
+        "month": 7,
+        "daily_volume": 281,
+        "token_monthly_cost": 53.35724802712502,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 123.35724802712502
+      },
+      {
+        "month": 8,
+        "daily_volume": 295,
+        "token_monthly_cost": 56.02511042848127,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 126.02511042848127
+      },
+      {
+        "month": 9,
+        "daily_volume": 310,
+        "token_monthly_cost": 58.82636594990534,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 128.82636594990532
+      },
+      {
+        "month": 10,
+        "daily_volume": 325,
+        "token_monthly_cost": 61.7676842474006,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 131.7676842474006
+      },
+      {
+        "month": 11,
+        "daily_volume": 342,
+        "token_monthly_cost": 64.85606845977064,
+        "infra_monthly_cost": 70.0,
+        "total_monthly_cost": 134.85606845977065
+      }
+    ],
+    "optimizations": []
+  },
+  "executive_summary": {
+    "workflow_name": "Tier 2B \u2014 Internal Q&A Bot",
+    "total_steps": 4,
+    "high_risk_steps": 0,
+    "checkpoints_required": 0,
+    "checkpoints_recommended": 0,
+    "failure_modes_high": 1,
+    "monthly_cost": 107.92,
+    "annual_cost": 1301.36,
+    "cost_per_request": 0.017987
+  }
+}

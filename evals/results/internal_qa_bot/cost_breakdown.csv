@@ -1,0 +1,3 @@
+step_id,step_name,model,tokens_in_per_request,tokens_out_per_request,cost_per_request,daily_cost,monthly_cost,annual_cost
+generate_answer,Generate answer,claude-haiku-4-5,3000,800,0.005600000000000001,1.12,33.6,408.8
+log_query,Log query and answer,claude-haiku-4-5,400,100,0.00072,0.14400000000000002,4.32,52.56000000000001

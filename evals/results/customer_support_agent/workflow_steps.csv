@@ -1,0 +1,13 @@
+step_id,name,type,model,depends_on,customer_facing,reversible,data_sensitivity
+intake,Receive customer message,input,,,False,True,low
+classify,Classify intent,ai_classification,claude-haiku-4-5,intake,False,True,low
+sentiment,Score customer sentiment,ai_classification,claude-haiku-4-5,intake,False,True,low
+escalation_check,Escalation decision,ai_classification,claude-haiku-4-5,classify;sentiment,False,True,low
+resolve,Execute account resolution,ai_action,claude-sonnet-4-20250514,escalation_check,True,False,critical
+respond,Generate customer response,ai_generation,claude-haiku-4-5,resolve,True,False,low
+format_response,Format and brand response,ai_action,claude-haiku-4-5,respond,True,False,low
+deliver_response,Deliver response to customer,ai_action,,format_response,True,False,low
+log_interaction,Log interaction to CRM,ai_action,claude-haiku-4-5,deliver_response,False,True,low
+update_crm,Update customer account status,ai_action,,log_interaction,False,True,low
+close_ticket,Close support ticket,ai_action,,update_crm,False,True,low
+human_handoff,Escalate to human agent,human_review,,escalation_check,False,True,low

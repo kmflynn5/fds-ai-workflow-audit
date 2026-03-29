@@ -1,0 +1,137 @@
+workflow:
+  name: "Tier 2C — Expense Processor"
+  description: "Receipt to reimbursement: AI extracts details, validates against policy, writes to accounting, then executes payment; payment step expected to score > 4.5 (tests scoring ceiling)"
+  owner: "Finance Operations Team"
+  environment: "production"
+
+steps:
+  - id: receipt_upload
+    name: "Receive expense receipt"
+    type: input
+    description: "Employee uploads receipt image or PDF through expense portal"
+    data_sensitivity: low
+
+  - id: extract_details
+    name: "Extract receipt details"
+    type: ai_generation
+    description: "OCR + AI extraction of merchant, amount, date, category, and tax from receipt image"
+    depends_on: [receipt_upload]
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 2000
+    estimated_tokens_out: 400
+    error_consequence: "Wrong amount or category extracted — incorrect reimbursement issued"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: validate_policy
+    name: "Validate against expense policy"
+    type: ai_classification
+    description: "Check extracted expense against company policy limits, approved vendors, and category rules"
+    depends_on: [extract_details]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 1000
+    estimated_tokens_out: 200
+    error_consequence: "Out-of-policy expense approved, or legitimate expense incorrectly rejected"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: accounting_write
+    name: "Write to accounting system"
+    type: ai_action
+    description: "Create journal entry in QuickBooks with GL code, cost center, and expense metadata"
+    depends_on: [validate_policy]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 800
+    estimated_tokens_out: 200
+    error_consequence: "Wrong GL code or cost center — misallocated expense, audit finding"
+    reversible: false
+    customer_facing: true
+    data_sensitivity: critical
+
+  - id: payment
+    name: "Execute reimbursement payment"
+    type: ai_action
+    description: "Initiate ACH transfer to employee bank account via Mercury API for approved reimbursement amount"
+    depends_on: [accounting_write]
+    error_consequence: "Wrong amount paid, duplicate payment, or payment to wrong account — financial loss and compliance violation"
+    reversible: false
+    customer_facing: true
+    data_sensitivity: critical
+
+  - id: notify_employee
+    name: "Notify employee of payment"
+    type: ai_generation
+    description: "Send payment confirmation email with amount, expected arrival date, and expense summary"
+    depends_on: [payment]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 400
+    estimated_tokens_out: 200
+    error_consequence: "Employee unaware of payment status — unnecessary follow-up tickets"
+    reversible: false
+    customer_facing: true
+
+  - id: notify_manager
+    name: "Notify manager of approval"
+    type: ai_action
+    description: "Send manager approval notification with expense summary and policy compliance status"
+    depends_on: [payment]
+    error_consequence: "Manager not notified — approval audit trail incomplete"
+    reversible: true
+
+  - id: update_hr_system
+    name: "Update HR expense record"
+    type: ai_action
+    description: "Write reimbursement record to HR system for annual expense reporting"
+    depends_on: [notify_employee]
+    error_consequence: "Missing HR record — year-end expense report inaccurate"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: archive_receipt
+    name: "Archive receipt for audit"
+    type: ai_action
+    description: "Store receipt image and metadata in compliance document store with 7-year retention tag"
+    depends_on: [update_hr_system]
+    error_consequence: "Receipt not archived — compliance violation on audit"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: audit_log
+    name: "Write audit log entry"
+    type: ai_action
+    description: "Write immutable audit log record with full expense lifecycle and approval chain"
+    depends_on: [archive_receipt]
+    error_consequence: "Audit log gap — SOX compliance risk"
+    reversible: false
+    data_sensitivity: critical
+
+  - id: close_expense_report
+    name: "Close expense report"
+    type: ai_action
+    description: "Mark expense report as fully processed; update employee dashboard"
+    depends_on: [audit_log]
+    error_consequence: "Report stays open — inflates pending queue metrics"
+    reversible: true
+
+volume:
+  requests_per_day: 50000
+  peak_multiplier: 2.0
+  growth_rate_monthly_pct: 3.0
+
+risk:
+  regulatory_environment: "regulated"
+  customer_facing: true
+  financial_impact_per_error: 5000.0
+  brand_risk: "high"
+  data_classification: "financial"
+
+infrastructure:
+  snowflake:
+    enabled: false
+  other_services:
+    - name: "QuickBooks Online"
+      monthly_cost: 80.0
+    - name: "Mercury Banking API"
+      monthly_cost: 0.0
+    - name: "DocuStore (compliance archive)"
+      monthly_cost: 200.0

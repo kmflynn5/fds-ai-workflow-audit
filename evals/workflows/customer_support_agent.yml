@@ -1,0 +1,154 @@
+workflow:
+  name: "Tier 2A — Customer Support Agent"
+  description: "Regulated support agent handling account actions (password reset, returns, billing adjustments) with sentiment-gated escalation; resolve step expected to score > 4.0"
+  owner: "Customer Experience Team"
+  environment: "production"
+
+steps:
+  - id: intake
+    name: "Receive customer message"
+    type: input
+    description: "Customer submits a support request via chat widget or email"
+    data_sensitivity: low
+
+  - id: classify
+    name: "Classify intent"
+    type: ai_classification
+    description: "Determine if request is password reset, order status, return, billing dispute, or other"
+    depends_on: [intake]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 500
+    estimated_tokens_out: 50
+    error_consequence: "Misrouted ticket — wrong resolution path taken"
+    reversible: true
+
+  - id: sentiment
+    name: "Score customer sentiment"
+    type: ai_classification
+    description: "Determine if customer is frustrated, neutral, or positive"
+    depends_on: [intake]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 800
+    estimated_tokens_out: 100
+    error_consequence: "Missed escalation of frustrated customer — potential churn"
+    reversible: true
+
+  - id: escalation_check
+    name: "Escalation decision"
+    type: ai_classification
+    description: "If sentiment is negative and confidence > 0.8, escalate to human; else proceed to resolve"
+    depends_on: [classify, sentiment]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 300
+    estimated_tokens_out: 50
+    error_consequence: "False negative: frustrated customer gets bot response. False positive: unnecessary human escalation"
+    reversible: true
+    branches:
+      escalate: human_handoff
+      continue: resolve
+
+  - id: resolve
+    name: "Execute account resolution"
+    type: ai_action
+    description: "Execute account action: reset password via API, initiate return, apply billing adjustment, or look up order status"
+    depends_on: [escalation_check]
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 2000
+    estimated_tokens_out: 600
+    tools:
+      - "password_reset_api"
+      - "order_management_api"
+      - "billing_adjustment_api"
+    error_consequence: "Wrong action taken on customer account — financial loss or account damage"
+    reversible: false
+    customer_facing: true
+    data_sensitivity: critical
+
+  - id: respond
+    name: "Generate customer response"
+    type: ai_generation
+    description: "Draft personalised response confirming the action taken"
+    depends_on: [resolve]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 800
+    estimated_tokens_out: 300
+    error_consequence: "Incorrect or misleading confirmation sent to customer"
+    reversible: false
+    customer_facing: true
+
+  - id: format_response
+    name: "Format and brand response"
+    type: ai_action
+    description: "Apply brand voice guidelines and formatting to the draft response"
+    depends_on: [respond]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 500
+    estimated_tokens_out: 300
+    error_consequence: "Off-brand or malformatted response delivered"
+    reversible: false
+    customer_facing: true
+
+  - id: deliver_response
+    name: "Deliver response to customer"
+    type: ai_action
+    description: "Send formatted response via chat widget, email, or SMS depending on channel"
+    depends_on: [format_response]
+    error_consequence: "Customer never receives confirmation — assumes issue unresolved"
+    reversible: false
+    customer_facing: true
+
+  - id: log_interaction
+    name: "Log interaction to CRM"
+    type: ai_action
+    description: "Write ticket summary, resolution type, and sentiment score to Salesforce"
+    depends_on: [deliver_response]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 500
+    estimated_tokens_out: 200
+    error_consequence: "Missing CRM record — support history unavailable for future interactions"
+    reversible: true
+
+  - id: update_crm
+    name: "Update customer account status"
+    type: ai_action
+    description: "Mark account flags resolved; update contact record with interaction outcome"
+    depends_on: [log_interaction]
+    error_consequence: "Stale account flags cause incorrect routing on next contact"
+    reversible: true
+
+  - id: close_ticket
+    name: "Close support ticket"
+    type: ai_action
+    description: "Mark ticket resolved and trigger CSAT survey"
+    depends_on: [update_crm]
+    error_consequence: "Open ticket inflates queue metrics; CSAT survey not sent"
+    reversible: true
+
+  - id: human_handoff
+    name: "Escalate to human agent"
+    type: human_review
+    description: "Transfer to live agent with full context summary and sentiment score"
+    depends_on: [escalation_check]
+
+volume:
+  requests_per_day: 100000
+  peak_multiplier: 4.0
+  growth_rate_monthly_pct: 8.0
+
+risk:
+  regulatory_environment: "regulated"
+  customer_facing: true
+  financial_impact_per_error: 200.0
+  brand_risk: "high"
+  data_classification: "PII"
+
+infrastructure:
+  snowflake:
+    enabled: true
+    credit_price: 3.00
+    estimated_credits_per_day: 20.0
+  other_services:
+    - name: "Salesforce CRM"
+      monthly_cost: 0.0
+    - name: "Resend (email/SMS)"
+      monthly_cost: 150.0

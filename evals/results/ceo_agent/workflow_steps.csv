@@ -1,0 +1,12 @@
+step_id,name,type,model,depends_on,customer_facing,reversible,data_sensitivity
+collect_open_brain,Query fds-recall (Open Brain),data_lookup,,,False,True,medium
+collect_github,Query GitHub API,data_lookup,,,False,True,low
+collect_mercury,Query Mercury Banking API,data_lookup,,,False,True,critical
+collect_zoho_mail,Query Zoho Mail API,data_lookup,,,False,True,high
+collect_zoho_calendar,Query Zoho Calendar API,data_lookup,,,False,True,low
+collect_pipeline,Query Pipeline CRM (Supabase),data_lookup,,,False,True,medium
+write_daily_brief,Write raw payload to Open Brain as daily_brief,ai_action,,collect_open_brain;collect_github;collect_mercury;collect_zoho_mail;collect_zoho_calendar;collect_pipeline,False,True,medium
+format_brief,Claude API formats decision-ready brief,ai_generation,claude-sonnet-4-20250514,write_daily_brief,False,True,low
+send_email,Send morning brief via Resend,ai_action,,format_brief,True,False,low
+parse_reply,Reply handler parses decisions,ai_classification,claude-sonnet-4-20250514,send_email,False,True,low
+write_decisions,Write decisions back to fds-recall,ai_action,,parse_reply,False,True,low

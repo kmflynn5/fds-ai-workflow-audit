@@ -1,0 +1,12 @@
+step_id,name,type,model,depends_on,customer_facing,reversible,data_sensitivity
+receipt_upload,Receive expense receipt,input,,,False,True,low
+extract_details,Extract receipt details,ai_generation,claude-sonnet-4-20250514,receipt_upload,False,True,medium
+validate_policy,Validate against expense policy,ai_classification,claude-haiku-4-5,extract_details,False,True,medium
+accounting_write,Write to accounting system,ai_action,claude-haiku-4-5,validate_policy,True,False,critical
+payment,Execute reimbursement payment,ai_action,,accounting_write,True,False,critical
+notify_employee,Notify employee of payment,ai_generation,claude-haiku-4-5,payment,True,False,low
+notify_manager,Notify manager of approval,ai_action,,payment,False,True,low
+update_hr_system,Update HR expense record,ai_action,,notify_employee,False,True,medium
+archive_receipt,Archive receipt for audit,ai_action,,update_hr_system,False,True,medium
+audit_log,Write audit log entry,ai_action,,archive_receipt,False,False,critical
+close_expense_report,Close expense report,ai_action,,audit_log,False,True,low

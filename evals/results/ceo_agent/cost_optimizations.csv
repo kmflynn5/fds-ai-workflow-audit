@@ -1,0 +1,2 @@
+step_id,step_name,suggestion,estimated_monthly_savings,category
+parse_reply,Reply handler parses decisions,Downgrade model from 'claude-sonnet-4-20250514' to 'claude-haiku-4-5' for classification task.,0.297,model_downgrade

@@ -1,0 +1,13 @@
+step_id,step_name,blast_radius,reversibility,frequency,verifiability,cascading_risk,composite,checkpoint_level
+intake,Receive customer message,2.0,1.0,5.0,1.0,5.0,2.12,none
+classify,Classify intent,3.0,1.0,5.0,2.0,5.0,2.5,none
+sentiment,Score customer sentiment,3.0,1.0,5.0,2.0,5.0,2.5,none
+escalation_check,Escalation decision,3.0,1.0,5.0,2.0,5.0,2.5,none
+resolve,Execute account resolution,5.0,5.0,5.0,3.0,5.0,4.12,required
+respond,Generate customer response,4.0,4.0,5.0,5.0,4.0,3.75,recommended
+format_response,Format and brand response,4.0,5.0,5.0,3.0,4.0,3.75,recommended
+deliver_response,Deliver response to customer,4.0,5.0,5.0,3.0,3.0,3.62,recommended
+log_interaction,Log interaction to CRM,3.0,1.0,5.0,3.0,3.0,2.38,none
+update_crm,Update customer account status,3.0,1.0,5.0,3.0,2.0,2.25,none
+close_ticket,Close support ticket,3.0,1.0,5.0,3.0,1.0,2.12,none
+human_handoff,Escalate to human agent,2.0,1.0,5.0,1.0,1.0,1.62,none

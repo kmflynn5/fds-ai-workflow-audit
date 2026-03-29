@@ -1,0 +1,5 @@
+step_id,name,type,model,depends_on,customer_facing,reversible,data_sensitivity
+question_intake,Receive employee question,input,,,False,True,low
+retrieve_docs,Retrieve relevant documents,data_lookup,,question_intake,False,True,low
+generate_answer,Generate answer,ai_generation,claude-haiku-4-5,retrieve_docs,False,True,low
+log_query,Log query and answer,ai_action,claude-haiku-4-5,generate_answer,False,True,low

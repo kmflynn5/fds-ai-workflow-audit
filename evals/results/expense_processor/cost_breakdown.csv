@@ -1,0 +1,5 @@
+step_id,step_name,model,tokens_in_per_request,tokens_out_per_request,cost_per_request,daily_cost,monthly_cost,annual_cost
+extract_details,Extract receipt details,claude-sonnet-4-20250514,2000,400,0.012,600.0,18000.0,219000.0
+validate_policy,Validate against expense policy,claude-haiku-4-5,1000,200,0.0016,80.0,2400.0,29200.0
+accounting_write,Write to accounting system,claude-haiku-4-5,800,200,0.00144,72.0,2160.0,26280.0
+notify_employee,Notify employee of payment,claude-haiku-4-5,400,200,0.0011200000000000001,56.00000000000001,1680.0000000000002,20440.000000000004

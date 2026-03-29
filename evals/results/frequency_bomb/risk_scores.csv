@@ -1,0 +1,5 @@
+step_id,step_name,blast_radius,reversibility,frequency,verifiability,cascading_risk,composite,checkpoint_level
+trigger,Scheduled batch trigger,1.0,1.0,2.0,1.0,3.0,1.25,none
+batch_processor,AI batch record processor,2.0,5.0,1.0,3.0,3.0,2.62,none
+write_summaries,Write summaries to database,2.0,5.0,1.0,3.0,2.0,2.5,none
+report,Generate batch completion report,1.0,1.0,1.0,4.0,1.0,1.25,none

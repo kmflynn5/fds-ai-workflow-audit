@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 import networkx as nx
@@ -28,6 +29,71 @@ class RiskScores:
     checkpoint_level: str  # "none" | "recommended" | "required"
 
 
+# Fix #6: keywords indicating a step writes/mutates data despite how it's declared
+_WRITE_KEYWORDS = frozenset(
+    {
+        "write",
+        "writes",
+        "update",
+        "updates",
+        "create",
+        "creates",
+        "modify",
+        "modifies",
+        "insert",
+        "inserts",
+        "mutate",
+        "mutates",
+        "upsert",
+        "upserts",
+        "delete",
+        "deletes",
+    }
+)
+
+# Fix #7: keywords that indicate a batch/loop pattern
+_BATCH_KEYWORDS = frozenset(
+    {
+        "batch",
+        "loop",
+        "loops",
+        "each record",
+        "per record",
+        "per item",
+        "each item",
+        "iterate",
+        "iterates",
+    }
+)
+
+_NUMBER_RE = re.compile(r"\b(\d{3,})\b")
+
+
+def _has_write_signal(step: WorkflowStep) -> bool:
+    """Return True if description contains write-indicating words (word-boundary match)."""
+    words = set(re.findall(r"\b\w+\b", step.description.lower()))
+    return bool(words & _WRITE_KEYWORDS)
+
+
+def _is_hidden_write(step: WorkflowStep) -> bool:
+    """True if a data_lookup step's description reveals it actually writes data."""
+    return step.type == StepType.data_lookup and _has_write_signal(step)
+
+
+def _heuristic_iterations(step: WorkflowStep) -> int:
+    """Return effective iterations per request from explicit field or description heuristic."""
+    if step.iterations_per_request > 1:
+        return step.iterations_per_request
+    desc = step.description.lower()
+    has_batch_signal = any(kw in desc for kw in _BATCH_KEYWORDS)
+    if not has_batch_signal:
+        return 1
+    numbers = [int(m) for m in _NUMBER_RE.findall(desc) if int(m) >= 100]
+    if numbers:
+        return max(numbers)
+    return 100  # default multiplier when batch signal found but no specific count
+
+
 def score_blast_radius(step: WorkflowStep, risk_profile: RiskProfile) -> float:
     score = 1.0
     if step.customer_facing:
@@ -38,10 +104,16 @@ def score_blast_radius(step: WorkflowStep, risk_profile: RiskProfile) -> float:
         score += 1.0
     if risk_profile.regulatory_environment in (RegulatoryEnvironment.regulated, RegulatoryEnvironment.critical):
         score += 1.0
+    # Fix #6: hidden write in a declared data_lookup raises blast
+    if _is_hidden_write(step):
+        score += 1.0
     return min(score, 5.0)
 
 
 def score_reversibility(step: WorkflowStep) -> float:
+    # Fix #6: data_lookup that secretly writes is treated as an irreversible action
+    if _is_hidden_write(step):
+        return 5.0
     if step.reversible and not step.tools:
         return 1.0
     if step.reversible and step.tools:
@@ -56,11 +128,10 @@ def score_reversibility(step: WorkflowStep) -> float:
     return 3.0
 
 
-def score_frequency(volume: VolumeProfile, graph: nx.DiGraph, step_id: str) -> float:
+def score_frequency(volume: VolumeProfile, graph: nx.DiGraph, step_id: str, step: WorkflowStep) -> float:
     base_volume = volume.requests_per_day
     predecessors = list(graph.predecessors(step_id))
     if predecessors:
-        # Non-root: estimate depth as length of shortest path from any root
         roots = [n for n in graph.nodes if graph.in_degree(n) == 0]
         min_depth = min(
             (nx.shortest_path_length(graph, root, step_id) for root in roots if nx.has_path(graph, root, step_id)),
@@ -69,6 +140,9 @@ def score_frequency(volume: VolumeProfile, graph: nx.DiGraph, step_id: str) -> f
         effective_volume = base_volume * (0.8**min_depth)
     else:
         effective_volume = base_volume
+
+    # Fix #7: multiply by iterations_per_request (explicit or heuristic)
+    effective_volume *= _heuristic_iterations(step)
 
     if effective_volume < 10:
         return 1.0
@@ -82,6 +156,9 @@ def score_frequency(volume: VolumeProfile, graph: nx.DiGraph, step_id: str) -> f
 
 
 def score_verifiability(step: WorkflowStep) -> float:
+    # Fix #6: hidden write in a declared data_lookup is as hard to verify as an ai_action
+    if _is_hidden_write(step):
+        return 3.0
     if step.type in (StepType.input, StepType.data_lookup):
         return 1.0
     if step.type == StepType.human_review:
@@ -114,8 +191,9 @@ def score_cascading_risk(graph: nx.DiGraph, step_id: str) -> float:
 
 def compute_composite(
     blast: float, reversibility: float, frequency: float, verifiability: float, cascading: float
-) -> float:  # noqa: E501
-    raw = (blast * 2 + reversibility * 2 + frequency + verifiability + cascading) / 8
+) -> float:
+    # Fix #2: denominator 7 (was 8) allows max ~4.71, enabling scores > 4.5 for high-risk steps
+    raw = (blast * 2 + reversibility * 2 + frequency + verifiability + cascading) / 7
     return round(raw, 2)
 
 
@@ -132,7 +210,7 @@ def score_workflow(config: WorkflowConfig, graph: nx.DiGraph) -> list[RiskScores
     for step in config.steps:
         blast = score_blast_radius(step, config.risk)
         rev = score_reversibility(step)
-        freq = score_frequency(config.volume, graph, step.id)
+        freq = score_frequency(config.volume, graph, step.id, step)
         ver = score_verifiability(step)
         casc = score_cascading_risk(graph, step.id)
         composite = compute_composite(blast, rev, freq, ver, casc)

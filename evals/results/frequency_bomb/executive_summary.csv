@@ -1,0 +1,2 @@
+workflow_name,total_steps,high_risk_steps,checkpoints_required,checkpoints_recommended,failure_modes_high,monthly_cost,annual_cost,cost_per_request
+Tier 3B — Frequency Bomb (Adversarial),4,0,0,0,0,0.91,11.1,0.00304
