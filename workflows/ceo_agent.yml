@@ -1,0 +1,138 @@
+workflow:
+  name: "FDS CEO Agent — Morning Brief System"
+  description: "Overnight collector gathers data from 6 sources, Claude API formats into decision-ready morning brief email, reply handler parses decisions and writes back to memory system"
+  owner: "Ken Flynn"
+  environment: "production"
+
+steps:
+  - id: collect_open_brain
+    name: "Query fds-recall (Open Brain)"
+    type: data_lookup
+    description: "list_recent (24h, all types) + semantic_search for unresolved items via Supabase Edge Function MCP endpoint"
+    data_sensitivity: medium
+    error_consequence: "Brief missing recent decisions, action items, and context"
+    reversible: true
+    # KNOWN FAILURE: Supabase Edge Function cold start timeout at 6:50 AM (3/19/2026)
+    # Root cause: function hadn't been called in hours, cold start exceeded timeout
+    # Fix: retry with backoff
+
+  - id: collect_github
+    name: "Query GitHub API"
+    type: data_lookup
+    description: "Commits, PRs, CI status across 9 FDS repos via GitHub REST API"
+    data_sensitivity: low
+    error_consequence: "Brief missing repo activity — low impact"
+    reversible: true
+    # KNOWN FAILURE: GitHub source failed on 3/16 first brief run
+    # Graceful degradation worked — brief generated with remaining sources
+
+  - id: collect_mercury
+    name: "Query Mercury Banking API"
+    type: data_lookup
+    description: "Account balances for 5 Profit First accounts, recent transactions"
+    data_sensitivity: critical
+    error_consequence: "Brief missing financial data, potential missed allocation deadlines"
+    reversible: true
+
+  - id: collect_zoho_mail
+    name: "Query Zoho Mail API"
+    type: data_lookup
+    description: "Recent actionable emails from client/prospect threads"
+    data_sensitivity: high
+    error_consequence: "Brief missing client communications, potential missed follow-ups"
+    reversible: true
+    # KNOWN FAILURE: Zoho API parameter bug silently returning zero results
+    # Root cause: incorrect API parameter caused valid-looking empty response
+    # Detection: magic_source tool flagged missing email data
+    # This is a SILENT FAILURE — response looked correct but data was missing
+
+  - id: collect_zoho_calendar
+    name: "Query Zoho Calendar API"
+    type: data_lookup
+    description: "Today's meetings, calls, deadlines"
+    data_sensitivity: low
+    error_consequence: "Brief missing calendar events — could miss meeting prep"
+    reversible: true
+
+  - id: collect_pipeline
+    name: "Query Pipeline CRM (Supabase)"
+    type: data_lookup
+    description: "Active deals with stages, contacts, last contact dates, next actions"
+    data_sensitivity: medium
+    error_consequence: "Brief falls back to reconstructing pipeline from client_notes — less accurate"
+    reversible: true
+    # KNOWN FAILURE: Before pipeline table existed, brief showed "No CRM source in payload"
+    # and reconstructed pipeline from scattered Open Brain notes
+
+  - id: write_daily_brief
+    name: "Write raw payload to Open Brain as daily_brief"
+    type: ai_action
+    description: "Capture the complete collected payload as a daily_brief thought in fds-recall"
+    depends_on: [collect_open_brain, collect_github, collect_mercury, collect_zoho_mail, collect_zoho_calendar, collect_pipeline]
+    data_sensitivity: medium
+    error_consequence: "No historical record of what was collected — breaks audit trail"
+    reversible: true
+    # KNOWN FAILURE: Recursive nesting — daily_briefs included prior daily_briefs
+    # causing compounding payload size
+    # Fix: filter out daily_brief type from list_recent query
+
+  - id: format_brief
+    name: "Claude API formats decision-ready brief"
+    type: ai_generation
+    description: "Claude Sonnet receives raw payload + magic_source tool + structured prompt, generates formatted HTML email"
+    depends_on: [write_daily_brief]
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 8000
+    estimated_tokens_out: 2000
+    tools:
+      - "magic_source"
+    error_consequence: "Brief is poorly formatted, decisions unclear, items dropped"
+    reversible: true
+    customer_facing: false
+    # KNOWN FAILURE: Brief truncation — payload hitting 12K char slice limit
+    # or 4096 max_tokens ceiling after Zoho integration added more data
+    # KNOWN FAILURE: Dynatrace and ARMI pipeline items dropped from formatted output
+    # Root cause: Claude API prompt filtering lower-probability deals or payload too large
+
+  - id: send_email
+    name: "Send morning brief via Resend"
+    type: ai_action
+    description: "Send formatted HTML email to ken@flynndata.com with reply-to set to inbound webhook address"
+    depends_on: [format_brief]
+    error_consequence: "Brief doesn't arrive — morning decision cadence broken"
+    reversible: false
+    customer_facing: true  # Ken is the customer here
+
+  - id: parse_reply
+    name: "Reply handler parses decisions"
+    type: ai_classification
+    description: "Resend inbound webhook receives Ken's reply, Claude API extracts Y/N decisions mapped to brief items"
+    depends_on: [send_email]
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 2000
+    estimated_tokens_out: 500
+    error_consequence: "Decisions misinterpreted or lost — actions taken incorrectly or not at all"
+    reversible: true
+    # KNOWN FAILURE: Decision duplicate writes — D2/D3 written multiple times
+    # Root cause: test artifacts (not a production bug), but the pattern
+    # of duplicate writes from retries is a real failure mode
+
+  - id: write_decisions
+    name: "Write decisions back to fds-recall"
+    type: ai_action
+    description: "Each parsed decision captured as project_decision in Open Brain"
+    depends_on: [parse_reply]
+    error_consequence: "Decisions not logged — agents and future briefs lose context"
+    reversible: true
+
+volume:
+  requests_per_day: 1
+  peak_multiplier: 1
+  growth_rate_monthly_pct: 0
+
+risk:
+  regulatory_environment: "standard"
+  customer_facing: true  # Ken relies on this for daily operations
+  financial_impact_per_error: 100  # Missed client follow-up, missed deadline
+  brand_risk: "low"  # Internal tool
+  data_classification: "PII"  # Contains client names, financial data

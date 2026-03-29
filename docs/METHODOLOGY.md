@@ -64,7 +64,7 @@ Workflows are described in YAML. Each workflow has a header (metadata, volume, g
 - `depends_on` — upstream steps (builds the DAG)
 - `error_consequence` — plain-text description of what breaks on failure
 
-See `examples/` for fully worked workflow configs.
+See `workflows/` and `examples/` for fully worked workflow configs.
 
 ### Assessment Engine
 

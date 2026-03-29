@@ -15,7 +15,7 @@ from engine.risk_scorer import (
 )
 
 PROJECT_ROOT = Path(__file__).parent.parent
-EXAMPLE_YAML = PROJECT_ROOT / "workflow.example.yml"
+EXAMPLE_YAML = PROJECT_ROOT / "workflows" / "workflow.example.yml"
 
 
 def test_score_workflow_example() -> None:
