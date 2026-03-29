@@ -1,6 +1,6 @@
 step_id,step_name,blast_radius,reversibility,frequency,verifiability,cascading_risk,composite,checkpoint_level
-crm_read,Read CRM contacts,1.0,1.0,1.0,1.0,4.0,1.25,none
-firmographic_lookup,Firmographic data lookup,1.0,2.0,1.0,1.0,3.0,1.38,none
-ai_enrichment,AI enrichment scoring,1.0,1.0,1.0,3.0,3.0,1.38,none
-enrich_and_update,Update CRM with enriched data,2.0,1.0,1.0,1.0,2.0,1.25,none
-quality_audit,Quality spot-check,1.0,1.0,1.0,1.0,1.0,0.88,none
+crm_read,Read CRM contacts,1.0,1.0,1.0,1.0,4.0,1.43,none
+firmographic_lookup,Firmographic data lookup,1.0,2.0,1.0,1.0,3.0,1.57,none
+ai_enrichment,AI enrichment scoring,1.0,1.0,1.0,3.0,3.0,1.57,none
+enrich_and_update,Update CRM with enriched data,3.0,5.0,1.0,3.0,2.0,3.14,none
+quality_audit,Quality spot-check,1.0,1.0,1.0,1.0,1.0,1.0,none

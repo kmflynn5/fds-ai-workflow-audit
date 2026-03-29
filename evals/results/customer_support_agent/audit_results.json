@@ -11,7 +11,7 @@
       "frequency": 5.0,
       "verifiability": 1.0,
       "cascading_risk": 5.0,
-      "composite": 2.12,
+      "composite": 2.43,
       "checkpoint_level": "none"
     },
     {
@@ -22,7 +22,7 @@
       "frequency": 5.0,
       "verifiability": 2.0,
       "cascading_risk": 5.0,
-      "composite": 2.5,
+      "composite": 2.86,
       "checkpoint_level": "none"
     },
     {
@@ -33,7 +33,7 @@
       "frequency": 5.0,
       "verifiability": 2.0,
       "cascading_risk": 5.0,
-      "composite": 2.5,
+      "composite": 2.86,
       "checkpoint_level": "none"
     },
     {
@@ -44,7 +44,7 @@
       "frequency": 5.0,
       "verifiability": 2.0,
       "cascading_risk": 5.0,
-      "composite": 2.5,
+      "composite": 2.86,
       "checkpoint_level": "none"
     },
     {
@@ -55,7 +55,7 @@
       "frequency": 5.0,
       "verifiability": 3.0,
       "cascading_risk": 5.0,
-      "composite": 4.12,
+      "composite": 4.71,
       "checkpoint_level": "required"
     },
     {
@@ -66,8 +66,8 @@
       "frequency": 5.0,
       "verifiability": 5.0,
       "cascading_risk": 4.0,
-      "composite": 3.75,
-      "checkpoint_level": "recommended"
+      "composite": 4.29,
+      "checkpoint_level": "required"
     },
     {
       "step_id": "format_response",
@@ -77,8 +77,8 @@
       "frequency": 5.0,
       "verifiability": 3.0,
       "cascading_risk": 4.0,
-      "composite": 3.75,
-      "checkpoint_level": "recommended"
+      "composite": 4.29,
+      "checkpoint_level": "required"
     },
     {
       "step_id": "deliver_response",
@@ -88,8 +88,8 @@
       "frequency": 5.0,
       "verifiability": 3.0,
       "cascading_risk": 3.0,
-      "composite": 3.62,
-      "checkpoint_level": "recommended"
+      "composite": 4.14,
+      "checkpoint_level": "required"
     },
     {
       "step_id": "log_interaction",
@@ -99,7 +99,7 @@
       "frequency": 5.0,
       "verifiability": 3.0,
       "cascading_risk": 3.0,
-      "composite": 2.38,
+      "composite": 2.71,
       "checkpoint_level": "none"
     },
     {
@@ -110,7 +110,7 @@
       "frequency": 5.0,
       "verifiability": 3.0,
       "cascading_risk": 2.0,
-      "composite": 2.25,
+      "composite": 2.57,
       "checkpoint_level": "none"
     },
     {
@@ -121,7 +121,7 @@
       "frequency": 5.0,
       "verifiability": 3.0,
       "cascading_risk": 1.0,
-      "composite": 2.12,
+      "composite": 2.43,
       "checkpoint_level": "none"
     },
     {
@@ -132,7 +132,7 @@
       "frequency": 5.0,
       "verifiability": 1.0,
       "cascading_risk": 1.0,
-      "composite": 1.62,
+      "composite": 1.86,
       "checkpoint_level": "none"
     }
   ],
@@ -160,6 +160,14 @@
       "risk_level": "medium",
       "rationale": "Step depth or workflow length increases specification drift risk",
       "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "classify",
+      "step_name": "Classify intent",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
     },
     {
       "step_id": "close_ticket",
@@ -258,6 +266,14 @@
       "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
     },
     {
+      "step_id": "escalation_check",
+      "step_name": "Escalation decision",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "format_response",
       "step_name": "Format and brand response",
       "failure_type": "cascading_failure",
@@ -298,6 +314,14 @@
       "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
     },
     {
+      "step_id": "format_response",
+      "step_name": "Format and brand response",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "intake",
       "step_name": "Receive customer message",
       "failure_type": "cascading_failure",
@@ -324,6 +348,14 @@
     {
       "step_id": "log_interaction",
       "step_name": "Log interaction to CRM",
+      "failure_type": "metadata_inconsistency",
+      "risk_level": "medium",
+      "rationale": "Step is marked reversible=true but description contains write/mutation keywords \u2014 reversibility claim may be incorrect",
+      "mitigation": "Verify that a genuine rollback path exists; add automated rollback test; set reversible=false if rollback is not implemented"
+    },
+    {
+      "step_id": "log_interaction",
+      "step_name": "Log interaction to CRM",
       "failure_type": "silent_failure",
       "risk_level": "medium",
       "rationale": "Action may complete successfully but with incorrect parameters",
@@ -344,6 +376,14 @@
       "risk_level": "medium",
       "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
       "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    },
+    {
+      "step_id": "log_interaction",
+      "step_name": "Log interaction to CRM",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
     },
     {
       "step_id": "resolve",
@@ -434,6 +474,14 @@
       "mitigation": "Cross-reference generated output against raw source data; add validation gate between lookup and generation"
     },
     {
+      "step_id": "respond",
+      "step_name": "Generate customer response",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "sentiment",
       "step_name": "Score customer sentiment",
       "failure_type": "cascading_failure",
@@ -458,6 +506,14 @@
       "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
     },
     {
+      "step_id": "sentiment",
+      "step_name": "Score customer sentiment",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "update_crm",
       "step_name": "Update customer account status",
       "failure_type": "cascading_failure",
@@ -472,6 +528,14 @@
       "risk_level": "medium",
       "rationale": "Multi-step workflow may degrade context quality",
       "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "update_crm",
+      "step_name": "Update customer account status",
+      "failure_type": "metadata_inconsistency",
+      "risk_level": "medium",
+      "rationale": "Step is marked reversible=true but description contains write/mutation keywords \u2014 reversibility claim may be incorrect",
+      "mitigation": "Verify that a genuine rollback path exists; add automated rollback test; set reversible=false if rollback is not implemented"
     },
     {
       "step_id": "update_crm",
@@ -554,6 +618,15 @@
       "estimated_daily_reviews": 7500
     },
     {
+      "step_id": "classify",
+      "step_name": "Classify intent",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
       "step_id": "deliver_response",
       "step_name": "Deliver response to customer",
       "checkpoint_type": "periodic calibration",
@@ -563,8 +636,26 @@
       "estimated_daily_reviews": null
     },
     {
+      "step_id": "escalation_check",
+      "step_name": "Escalation decision",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
       "step_id": "format_response",
       "step_name": "Format and brand response",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "log_interaction",
+      "step_name": "Log interaction to CRM",
       "checkpoint_type": "periodic calibration",
       "priority": "suggested",
       "rationale": "Long workflow benefits from periodic specification re-injection",
@@ -583,6 +674,24 @@
     {
       "step_id": "respond",
       "step_name": "Generate customer response",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "sentiment",
+      "step_name": "Score customer sentiment",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "update_crm",
+      "step_name": "Update customer account status",
       "checkpoint_type": "periodic calibration",
       "priority": "suggested",
       "rationale": "Long workflow benefits from periodic specification re-injection",

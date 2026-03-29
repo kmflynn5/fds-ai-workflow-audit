@@ -1,3 +1,9 @@
 step_id,step_name,checkpoint_type,priority,rationale,implementation_detail,estimated_daily_reviews
 step_10,Publish final output,pre-flight review,required,High blast radius with irreversible action requires human pre-approval,Human must approve before step executes; add approval queue with SLA target,500
+step_01,Ingest and normalize input,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+step_02,Classify primary intent,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+step_03,Extract secondary attributes,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+step_04,Retrieve relevant context,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+step_06,Draft initial response,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+step_08,Apply style and tone,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
 step_10,Publish final output,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,

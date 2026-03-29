@@ -11,7 +11,7 @@
       "frequency": 3.0,
       "verifiability": 3.0,
       "cascading_risk": 5.0,
-      "composite": 2.38,
+      "composite": 2.71,
       "checkpoint_level": "none"
     },
     {
@@ -22,7 +22,7 @@
       "frequency": 3.0,
       "verifiability": 2.0,
       "cascading_risk": 5.0,
-      "composite": 2.25,
+      "composite": 2.57,
       "checkpoint_level": "none"
     },
     {
@@ -33,7 +33,7 @@
       "frequency": 3.0,
       "verifiability": 2.0,
       "cascading_risk": 5.0,
-      "composite": 2.25,
+      "composite": 2.57,
       "checkpoint_level": "none"
     },
     {
@@ -44,7 +44,7 @@
       "frequency": 3.0,
       "verifiability": 1.0,
       "cascading_risk": 5.0,
-      "composite": 2.38,
+      "composite": 2.71,
       "checkpoint_level": "none"
     },
     {
@@ -55,7 +55,7 @@
       "frequency": 3.0,
       "verifiability": 2.0,
       "cascading_risk": 4.0,
-      "composite": 2.12,
+      "composite": 2.43,
       "checkpoint_level": "none"
     },
     {
@@ -66,7 +66,7 @@
       "frequency": 3.0,
       "verifiability": 4.0,
       "cascading_risk": 4.0,
-      "composite": 2.38,
+      "composite": 2.71,
       "checkpoint_level": "none"
     },
     {
@@ -77,7 +77,7 @@
       "frequency": 3.0,
       "verifiability": 2.0,
       "cascading_risk": 3.0,
-      "composite": 2.0,
+      "composite": 2.29,
       "checkpoint_level": "none"
     },
     {
@@ -88,7 +88,7 @@
       "frequency": 3.0,
       "verifiability": 4.0,
       "cascading_risk": 3.0,
-      "composite": 2.25,
+      "composite": 2.57,
       "checkpoint_level": "none"
     },
     {
@@ -99,7 +99,7 @@
       "frequency": 2.0,
       "verifiability": 2.0,
       "cascading_risk": 2.0,
-      "composite": 1.75,
+      "composite": 2.0,
       "checkpoint_level": "none"
     },
     {
@@ -110,8 +110,8 @@
       "frequency": 2.0,
       "verifiability": 3.0,
       "cascading_risk": 1.0,
-      "composite": 3.25,
-      "checkpoint_level": "none"
+      "composite": 3.71,
+      "checkpoint_level": "recommended"
     }
   ],
   "failure_mappings": [
@@ -180,6 +180,14 @@
       "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
     },
     {
+      "step_id": "step_02",
+      "step_name": "Classify primary intent",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "step_03",
       "step_name": "Extract secondary attributes",
       "failure_type": "cascading_failure",
@@ -202,6 +210,14 @@
       "risk_level": "medium",
       "rationale": "Step depth or workflow length increases specification drift risk",
       "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "step_03",
+      "step_name": "Extract secondary attributes",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
     },
     {
       "step_id": "step_04",
@@ -244,6 +260,14 @@
       "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
     },
     {
+      "step_id": "step_05",
+      "step_name": "Score context relevance",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "step_06",
       "step_name": "Draft initial response",
       "failure_type": "cascading_failure",
@@ -284,6 +308,14 @@
       "mitigation": "Cross-reference generated output against raw source data; add validation gate between lookup and generation"
     },
     {
+      "step_id": "step_06",
+      "step_name": "Draft initial response",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "step_07",
       "step_name": "Fact-check draft",
       "failure_type": "cascading_failure",
@@ -306,6 +338,14 @@
       "risk_level": "high",
       "rationale": "Late-stage step in long workflow prone to forgetting original specification",
       "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "step_07",
+      "step_name": "Fact-check draft",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
     },
     {
       "step_id": "step_08",
@@ -348,6 +388,14 @@
       "mitigation": "Cross-reference generated output against raw source data; add validation gate between lookup and generation"
     },
     {
+      "step_id": "step_08",
+      "step_name": "Apply style and tone",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "step_09",
       "step_name": "Compliance filter",
       "failure_type": "cascading_failure",
@@ -370,6 +418,14 @@
       "risk_level": "high",
       "rationale": "Late-stage step in long workflow prone to forgetting original specification",
       "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "step_09",
+      "step_name": "Compliance filter",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
     },
     {
       "step_id": "step_10",
@@ -413,6 +469,60 @@
       "rationale": "High blast radius with irreversible action requires human pre-approval",
       "implementation_detail": "Human must approve before step executes; add approval queue with SLA target",
       "estimated_daily_reviews": 500
+    },
+    {
+      "step_id": "step_01",
+      "step_name": "Ingest and normalize input",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "step_02",
+      "step_name": "Classify primary intent",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "step_03",
+      "step_name": "Extract secondary attributes",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "step_04",
+      "step_name": "Retrieve relevant context",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "step_06",
+      "step_name": "Draft initial response",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "step_08",
+      "step_name": "Apply style and tone",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
     },
     {
       "step_id": "step_10",
@@ -607,7 +717,7 @@
   "executive_summary": {
     "workflow_name": "Tier 3C \u2014 Cascading Chain (Adversarial)",
     "total_steps": 10,
-    "high_risk_steps": 0,
+    "high_risk_steps": 1,
     "checkpoints_required": 1,
     "checkpoints_recommended": 0,
     "failure_modes_high": 16,
