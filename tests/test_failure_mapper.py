@@ -42,15 +42,16 @@ def test_silent_failure_customer_facing() -> None:
     assert respond_silent[0].risk_level == RiskLevel.high
 
 
-def test_no_tools_no_tool_error() -> None:
-    """classify has no tools — there should be no tool_selection_error mapping for it."""
+def test_no_tools_ai_classification_gets_low_tool_error() -> None:
+    """classify has no tools but has a model — should produce a LOW tool_selection_error (fix #4)."""
     config, graph = _load()
     failures = map_failures(config, graph)
 
     classify_tool_errors = [
         f for f in failures if f.step_id == "classify" and f.failure_type == FailureType.tool_selection_error
     ]
-    assert len(classify_tool_errors) == 0
+    assert len(classify_tool_errors) == 1
+    assert classify_tool_errors[0].risk_level == RiskLevel.low
 
 
 def test_cascading_failure() -> None:

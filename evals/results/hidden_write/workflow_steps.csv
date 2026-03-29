@@ -1,0 +1,6 @@
+step_id,name,type,model,depends_on,customer_facing,reversible,data_sensitivity
+crm_read,Read CRM contacts,data_lookup,,,False,True,low
+firmographic_lookup,Firmographic data lookup,data_lookup,,crm_read,False,True,low
+ai_enrichment,AI enrichment scoring,ai_action,claude-haiku-4-5,firmographic_lookup,False,True,low
+enrich_and_update,Update CRM with enriched data,data_lookup,,ai_enrichment,False,True,high
+quality_audit,Quality spot-check,data_lookup,,enrich_and_update,False,True,low

@@ -1,0 +1,310 @@
+{
+  "workflow_name": "Tier 3B \u2014 Frequency Bomb (Adversarial)",
+  "workflow_description": "Adversarial: declared volume is 10 requests/day, but the batch_processor step iterates over 1000 records per invocation \u2014 effective AI call volume is 10,000/day. Tool uses declared volume only and will score frequency as LOW (10 req/day) rather than HIGH (10,000 effective). Expected to MISS the frequency bomb pattern.",
+  "total_steps": 4,
+  "risk_scores": [
+    {
+      "step_id": "trigger",
+      "step_name": "Scheduled batch trigger",
+      "blast_radius": 1.0,
+      "reversibility": 1.0,
+      "frequency": 2.0,
+      "verifiability": 1.0,
+      "cascading_risk": 3.0,
+      "composite": 1.25,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "batch_processor",
+      "step_name": "AI batch record processor",
+      "blast_radius": 2.0,
+      "reversibility": 5.0,
+      "frequency": 1.0,
+      "verifiability": 3.0,
+      "cascading_risk": 3.0,
+      "composite": 2.62,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "write_summaries",
+      "step_name": "Write summaries to database",
+      "blast_radius": 2.0,
+      "reversibility": 5.0,
+      "frequency": 1.0,
+      "verifiability": 3.0,
+      "cascading_risk": 2.0,
+      "composite": 2.5,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "report",
+      "step_name": "Generate batch completion report",
+      "blast_radius": 1.0,
+      "reversibility": 1.0,
+      "frequency": 1.0,
+      "verifiability": 4.0,
+      "cascading_risk": 1.0,
+      "composite": 1.25,
+      "checkpoint_level": "none"
+    }
+  ],
+  "failure_mappings": [
+    {
+      "step_id": "batch_processor",
+      "step_name": "AI batch record processor",
+      "failure_type": "cascading_failure",
+      "risk_level": "medium",
+      "rationale": "Failure propagates to 2 downstream steps",
+      "mitigation": "Add output validation at this step; define a fallback branch for failure cases"
+    },
+    {
+      "step_id": "batch_processor",
+      "step_name": "AI batch record processor",
+      "failure_type": "context_degradation",
+      "risk_level": "low",
+      "rationale": "Short workflow; context degradation risk is minimal",
+      "mitigation": "Standard context monitoring is sufficient"
+    },
+    {
+      "step_id": "batch_processor",
+      "step_name": "AI batch record processor",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "batch_processor",
+      "step_name": "AI batch record processor",
+      "failure_type": "specification_drift",
+      "risk_level": "low",
+      "rationale": "Step is near the workflow root; specification drift is unlikely",
+      "mitigation": "Include original task specification in system prompt as a precaution"
+    },
+    {
+      "step_id": "batch_processor",
+      "step_name": "AI batch record processor",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "low",
+      "rationale": "No upstream classified or looked-up data to blindly confirm",
+      "mitigation": "Ensure prompt instructs the model to flag uncertainty rather than assume correctness"
+    },
+    {
+      "step_id": "report",
+      "step_name": "Generate batch completion report",
+      "failure_type": "context_degradation",
+      "risk_level": "low",
+      "rationale": "Short workflow; context degradation risk is minimal",
+      "mitigation": "Standard context monitoring is sufficient"
+    },
+    {
+      "step_id": "report",
+      "step_name": "Generate batch completion report",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Generated content may appear correct but contain factual errors",
+      "mitigation": "Add automated factual-consistency checks; route edge-case outputs to human review queue"
+    },
+    {
+      "step_id": "report",
+      "step_name": "Generate batch completion report",
+      "failure_type": "specification_drift",
+      "risk_level": "medium",
+      "rationale": "Step depth or workflow length increases specification drift risk",
+      "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "report",
+      "step_name": "Generate batch completion report",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "low",
+      "rationale": "No upstream classified or looked-up data to blindly confirm",
+      "mitigation": "Ensure prompt instructs the model to flag uncertainty rather than assume correctness"
+    },
+    {
+      "step_id": "trigger",
+      "step_name": "Scheduled batch trigger",
+      "failure_type": "cascading_failure",
+      "risk_level": "medium",
+      "rationale": "Failure propagates to 3 downstream steps",
+      "mitigation": "Add output validation at this step; define a fallback branch for failure cases"
+    },
+    {
+      "step_id": "write_summaries",
+      "step_name": "Write summaries to database",
+      "failure_type": "cascading_failure",
+      "risk_level": "low",
+      "rationale": "Failure affects 1 downstream step",
+      "mitigation": "Ensure the downstream step handles missing or malformed input gracefully"
+    },
+    {
+      "step_id": "write_summaries",
+      "step_name": "Write summaries to database",
+      "failure_type": "context_degradation",
+      "risk_level": "low",
+      "rationale": "Short workflow; context degradation risk is minimal",
+      "mitigation": "Standard context monitoring is sufficient"
+    },
+    {
+      "step_id": "write_summaries",
+      "step_name": "Write summaries to database",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "write_summaries",
+      "step_name": "Write summaries to database",
+      "failure_type": "specification_drift",
+      "risk_level": "medium",
+      "rationale": "Step depth or workflow length increases specification drift risk",
+      "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "write_summaries",
+      "step_name": "Write summaries to database",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "low",
+      "rationale": "No upstream classified or looked-up data to blindly confirm",
+      "mitigation": "Ensure prompt instructs the model to flag uncertainty rather than assume correctness"
+    }
+  ],
+  "checkpoints": [],
+  "cost_report": {
+    "step_costs": [
+      {
+        "step_id": "batch_processor",
+        "step_name": "AI batch record processor",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 800,
+        "tokens_out_per_request": 300,
+        "cost_per_request": 0.00184,
+        "daily_cost": 0.0184,
+        "monthly_cost": 0.552,
+        "annual_cost": 6.716
+      },
+      {
+        "step_id": "report",
+        "step_name": "Generate batch completion report",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 500,
+        "tokens_out_per_request": 200,
+        "cost_per_request": 0.0012000000000000001,
+        "daily_cost": 0.012,
+        "monthly_cost": 0.36,
+        "annual_cost": 4.38
+      }
+    ],
+    "total_token_daily": 0.0304,
+    "total_token_monthly": 0.912,
+    "total_token_annual": 11.096,
+    "infra_cost": {
+      "snowflake_daily": 0.0,
+      "snowflake_monthly": 0.0,
+      "other_services_monthly": 0,
+      "total_infra_monthly": 0.0
+    },
+    "total_monthly": 0.912,
+    "total_annual": 11.096,
+    "cost_per_request": 0.00304,
+    "growth_projections": [
+      {
+        "month": 0,
+        "daily_volume": 10,
+        "token_monthly_cost": 0.912,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 0.912
+      },
+      {
+        "month": 1,
+        "daily_volume": 10,
+        "token_monthly_cost": 0.9576000000000001,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 0.9576000000000001
+      },
+      {
+        "month": 2,
+        "daily_volume": 11,
+        "token_monthly_cost": 1.0054800000000002,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1.0054800000000002
+      },
+      {
+        "month": 3,
+        "daily_volume": 11,
+        "token_monthly_cost": 1.055754,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1.055754
+      },
+      {
+        "month": 4,
+        "daily_volume": 12,
+        "token_monthly_cost": 1.1085417000000002,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1.1085417000000002
+      },
+      {
+        "month": 5,
+        "daily_volume": 12,
+        "token_monthly_cost": 1.1639687850000004,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1.1639687850000004
+      },
+      {
+        "month": 6,
+        "daily_volume": 13,
+        "token_monthly_cost": 1.2221672242500004,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1.2221672242500004
+      },
+      {
+        "month": 7,
+        "daily_volume": 14,
+        "token_monthly_cost": 1.2832755854625004,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1.2832755854625004
+      },
+      {
+        "month": 8,
+        "daily_volume": 14,
+        "token_monthly_cost": 1.3474393647356255,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1.3474393647356255
+      },
+      {
+        "month": 9,
+        "daily_volume": 15,
+        "token_monthly_cost": 1.4148113329724068,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1.4148113329724068
+      },
+      {
+        "month": 10,
+        "daily_volume": 16,
+        "token_monthly_cost": 1.485551899621027,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1.485551899621027
+      },
+      {
+        "month": 11,
+        "daily_volume": 17,
+        "token_monthly_cost": 1.5598294946020785,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1.5598294946020785
+      }
+    ],
+    "optimizations": []
+  },
+  "executive_summary": {
+    "workflow_name": "Tier 3B \u2014 Frequency Bomb (Adversarial)",
+    "total_steps": 4,
+    "high_risk_steps": 0,
+    "checkpoints_required": 0,
+    "checkpoints_recommended": 0,
+    "failure_modes_high": 0,
+    "monthly_cost": 0.91,
+    "annual_cost": 11.1,
+    "cost_per_request": 0.00304
+  }
+}

@@ -1,0 +1,12 @@
+step_id,step_name,blast_radius,reversibility,frequency,verifiability,cascading_risk,composite,checkpoint_level
+receipt_upload,Receive expense receipt,2.0,1.0,5.0,1.0,5.0,2.12,none
+extract_details,Extract receipt details,3.0,1.0,5.0,4.0,5.0,2.75,none
+validate_policy,Validate against expense policy,3.0,1.0,5.0,2.0,5.0,2.5,none
+accounting_write,Write to accounting system,5.0,5.0,5.0,3.0,5.0,4.12,required
+payment,Execute reimbursement payment,5.0,5.0,5.0,3.0,5.0,4.12,required
+notify_employee,Notify employee of payment,4.0,4.0,5.0,5.0,4.0,3.75,recommended
+notify_manager,Notify manager of approval,3.0,1.0,5.0,3.0,1.0,2.12,none
+update_hr_system,Update HR expense record,3.0,1.0,5.0,3.0,3.0,2.38,none
+archive_receipt,Archive receipt for audit,3.0,1.0,5.0,3.0,3.0,2.38,none
+audit_log,Write audit log entry,4.0,5.0,4.0,3.0,2.0,3.38,none
+close_expense_report,Close expense report,3.0,1.0,4.0,3.0,1.0,2.0,none

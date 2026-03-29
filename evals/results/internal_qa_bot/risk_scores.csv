@@ -1,0 +1,5 @@
+step_id,step_name,blast_radius,reversibility,frequency,verifiability,cascading_risk,composite,checkpoint_level
+question_intake,Receive employee question,1.0,1.0,3.0,1.0,3.0,1.38,none
+retrieve_docs,Retrieve relevant documents,2.0,2.0,3.0,1.0,3.0,1.88,none
+generate_answer,Generate answer,2.0,1.0,3.0,4.0,2.0,1.88,none
+log_query,Log query and answer,2.0,1.0,3.0,3.0,1.0,1.62,none

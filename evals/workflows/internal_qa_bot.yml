@@ -1,0 +1,67 @@
+workflow:
+  name: "Tier 2B — Internal Q&A Bot"
+  description: "Simple RAG Q&A assistant for employees to query internal documentation; no external actions, not customer-facing; all steps expected to score <= 3.0"
+  owner: "Internal Tools Team"
+  environment: "production"
+
+steps:
+  - id: question_intake
+    name: "Receive employee question"
+    type: input
+    description: "Employee submits a natural language question through the internal portal"
+    data_sensitivity: low
+
+  - id: retrieve_docs
+    name: "Retrieve relevant documents"
+    type: data_lookup
+    description: "Query the vector store (Pinecone) to find the most relevant internal policy documents"
+    depends_on: [question_intake]
+    tools:
+      - "vector_db_api"
+    data_sensitivity: low
+    error_consequence: "Wrong documents retrieved — answer will be grounded in irrelevant context"
+    reversible: true
+
+  - id: generate_answer
+    name: "Generate answer"
+    type: ai_generation
+    description: "Generate a factual, grounded answer based on retrieved context passages"
+    depends_on: [retrieve_docs]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 3000
+    estimated_tokens_out: 800
+    error_consequence: "Plausible but incorrect answer — silent failure risk"
+    customer_facing: false
+    reversible: true
+    data_sensitivity: low
+
+  - id: log_query
+    name: "Log query and answer"
+    type: ai_action
+    description: "Write question, retrieved doc IDs, and generated answer to internal audit log"
+    depends_on: [generate_answer]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 400
+    estimated_tokens_out: 100
+    error_consequence: "Missing audit record — query history unavailable for model improvement"
+    reversible: true
+    data_sensitivity: low
+
+volume:
+  requests_per_day: 200
+  peak_multiplier: 2.0
+  growth_rate_monthly_pct: 5.0
+
+risk:
+  regulatory_environment: "standard"
+  customer_facing: false
+  financial_impact_per_error: 5.0
+  brand_risk: "low"
+  data_classification: "internal"
+
+infrastructure:
+  snowflake:
+    enabled: false
+  other_services:
+    - name: "Pinecone Vector Database"
+      monthly_cost: 70.0

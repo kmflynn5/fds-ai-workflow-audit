@@ -1,0 +1,2 @@
+workflow_name,total_steps,high_risk_steps,checkpoints_required,checkpoints_recommended,failure_modes_high,monthly_cost,annual_cost,cost_per_request
+Tier 3C — Cascading Chain (Adversarial),10,0,1,0,16,616.8,7504.4,0.04112

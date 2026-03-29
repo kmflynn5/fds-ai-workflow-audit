@@ -1,0 +1,11 @@
+step_id,step_name,blast_radius,reversibility,frequency,verifiability,cascading_risk,composite,checkpoint_level
+step_01,Ingest and normalize input,3.0,1.0,3.0,3.0,5.0,2.38,none
+step_02,Classify primary intent,3.0,1.0,3.0,2.0,5.0,2.25,none
+step_03,Extract secondary attributes,3.0,1.0,3.0,2.0,5.0,2.25,none
+step_04,Retrieve relevant context,3.0,2.0,3.0,1.0,5.0,2.38,none
+step_05,Score context relevance,3.0,1.0,3.0,2.0,4.0,2.12,none
+step_06,Draft initial response,3.0,1.0,3.0,4.0,4.0,2.38,none
+step_07,Fact-check draft,3.0,1.0,3.0,2.0,3.0,2.0,none
+step_08,Apply style and tone,3.0,1.0,3.0,4.0,3.0,2.25,none
+step_09,Compliance filter,3.0,1.0,2.0,2.0,2.0,1.75,none
+step_10,Publish final output,5.0,5.0,2.0,3.0,1.0,3.25,none

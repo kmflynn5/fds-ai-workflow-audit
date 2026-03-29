@@ -1,0 +1,618 @@
+{
+  "workflow_name": "Tier 3C \u2014 Cascading Chain (Adversarial)",
+  "workflow_description": "Adversarial: 10-step linear AI chain with no validation gates between steps. Each step operates at ~85% accuracy. Compound accuracy = 0.85^10 \u2248 20% \u2014 80% of outputs are wrong by the final step. Tool should flag compound error rate but only computes per-step cascading risk; compound degradation is expected to be a MISS.",
+  "total_steps": 10,
+  "risk_scores": [
+    {
+      "step_id": "step_01",
+      "step_name": "Ingest and normalize input",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 3.0,
+      "verifiability": 3.0,
+      "cascading_risk": 5.0,
+      "composite": 2.38,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "step_02",
+      "step_name": "Classify primary intent",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 3.0,
+      "verifiability": 2.0,
+      "cascading_risk": 5.0,
+      "composite": 2.25,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "step_03",
+      "step_name": "Extract secondary attributes",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 3.0,
+      "verifiability": 2.0,
+      "cascading_risk": 5.0,
+      "composite": 2.25,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "step_04",
+      "step_name": "Retrieve relevant context",
+      "blast_radius": 3.0,
+      "reversibility": 2.0,
+      "frequency": 3.0,
+      "verifiability": 1.0,
+      "cascading_risk": 5.0,
+      "composite": 2.38,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "step_05",
+      "step_name": "Score context relevance",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 3.0,
+      "verifiability": 2.0,
+      "cascading_risk": 4.0,
+      "composite": 2.12,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "step_06",
+      "step_name": "Draft initial response",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 3.0,
+      "verifiability": 4.0,
+      "cascading_risk": 4.0,
+      "composite": 2.38,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "step_07",
+      "step_name": "Fact-check draft",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 3.0,
+      "verifiability": 2.0,
+      "cascading_risk": 3.0,
+      "composite": 2.0,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "step_08",
+      "step_name": "Apply style and tone",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 3.0,
+      "verifiability": 4.0,
+      "cascading_risk": 3.0,
+      "composite": 2.25,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "step_09",
+      "step_name": "Compliance filter",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 2.0,
+      "verifiability": 2.0,
+      "cascading_risk": 2.0,
+      "composite": 1.75,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "step_10",
+      "step_name": "Publish final output",
+      "blast_radius": 5.0,
+      "reversibility": 5.0,
+      "frequency": 2.0,
+      "verifiability": 3.0,
+      "cascading_risk": 1.0,
+      "composite": 3.25,
+      "checkpoint_level": "none"
+    }
+  ],
+  "failure_mappings": [
+    {
+      "step_id": "step_01",
+      "step_name": "Ingest and normalize input",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 9 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "step_01",
+      "step_name": "Ingest and normalize input",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "step_01",
+      "step_name": "Ingest and normalize input",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "step_01",
+      "step_name": "Ingest and normalize input",
+      "failure_type": "specification_drift",
+      "risk_level": "medium",
+      "rationale": "Step depth or workflow length increases specification drift risk",
+      "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "step_01",
+      "step_name": "Ingest and normalize input",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "low",
+      "rationale": "No upstream classified or looked-up data to blindly confirm",
+      "mitigation": "Ensure prompt instructs the model to flag uncertainty rather than assume correctness"
+    },
+    {
+      "step_id": "step_02",
+      "step_name": "Classify primary intent",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 8 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "step_02",
+      "step_name": "Classify primary intent",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "step_02",
+      "step_name": "Classify primary intent",
+      "failure_type": "specification_drift",
+      "risk_level": "medium",
+      "rationale": "Step depth or workflow length increases specification drift risk",
+      "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "step_03",
+      "step_name": "Extract secondary attributes",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 7 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "step_03",
+      "step_name": "Extract secondary attributes",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "step_03",
+      "step_name": "Extract secondary attributes",
+      "failure_type": "specification_drift",
+      "risk_level": "medium",
+      "rationale": "Step depth or workflow length increases specification drift risk",
+      "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "step_04",
+      "step_name": "Retrieve relevant context",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 6 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "step_04",
+      "step_name": "Retrieve relevant context",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "Step has 1 tool \u2014 minimal selection ambiguity",
+      "mitigation": "Verify the single tool is invoked with correct parameters via parameter schema validation"
+    },
+    {
+      "step_id": "step_05",
+      "step_name": "Score context relevance",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 5 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "step_05",
+      "step_name": "Score context relevance",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "step_05",
+      "step_name": "Score context relevance",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "step_06",
+      "step_name": "Draft initial response",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 4 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "step_06",
+      "step_name": "Draft initial response",
+      "failure_type": "context_degradation",
+      "risk_level": "high",
+      "rationale": "Long workflow with generation step risks context window saturation",
+      "mitigation": "Implement context summarization between steps; re-inject critical context at each generation step"
+    },
+    {
+      "step_id": "step_06",
+      "step_name": "Draft initial response",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Generated content may appear correct but contain factual errors",
+      "mitigation": "Add automated factual-consistency checks; route edge-case outputs to human review queue"
+    },
+    {
+      "step_id": "step_06",
+      "step_name": "Draft initial response",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "step_06",
+      "step_name": "Draft initial response",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "high",
+      "rationale": "Generation step builds on classified/looked-up data \u2014 may confirm incorrect upstream data",
+      "mitigation": "Cross-reference generated output against raw source data; add validation gate between lookup and generation"
+    },
+    {
+      "step_id": "step_07",
+      "step_name": "Fact-check draft",
+      "failure_type": "cascading_failure",
+      "risk_level": "medium",
+      "rationale": "Failure propagates to 3 downstream steps",
+      "mitigation": "Add output validation at this step; define a fallback branch for failure cases"
+    },
+    {
+      "step_id": "step_07",
+      "step_name": "Fact-check draft",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "step_07",
+      "step_name": "Fact-check draft",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "step_08",
+      "step_name": "Apply style and tone",
+      "failure_type": "cascading_failure",
+      "risk_level": "medium",
+      "rationale": "Failure propagates to 2 downstream steps",
+      "mitigation": "Add output validation at this step; define a fallback branch for failure cases"
+    },
+    {
+      "step_id": "step_08",
+      "step_name": "Apply style and tone",
+      "failure_type": "context_degradation",
+      "risk_level": "high",
+      "rationale": "Long workflow with generation step risks context window saturation",
+      "mitigation": "Implement context summarization between steps; re-inject critical context at each generation step"
+    },
+    {
+      "step_id": "step_08",
+      "step_name": "Apply style and tone",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Generated content may appear correct but contain factual errors",
+      "mitigation": "Add automated factual-consistency checks; route edge-case outputs to human review queue"
+    },
+    {
+      "step_id": "step_08",
+      "step_name": "Apply style and tone",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "step_08",
+      "step_name": "Apply style and tone",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "high",
+      "rationale": "Generation step builds on classified/looked-up data \u2014 may confirm incorrect upstream data",
+      "mitigation": "Cross-reference generated output against raw source data; add validation gate between lookup and generation"
+    },
+    {
+      "step_id": "step_09",
+      "step_name": "Compliance filter",
+      "failure_type": "cascading_failure",
+      "risk_level": "low",
+      "rationale": "Failure affects 1 downstream step",
+      "mitigation": "Ensure the downstream step handles missing or malformed input gracefully"
+    },
+    {
+      "step_id": "step_09",
+      "step_name": "Compliance filter",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "step_09",
+      "step_name": "Compliance filter",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "step_10",
+      "step_name": "Publish final output",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "step_10",
+      "step_name": "Publish final output",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "step_10",
+      "step_name": "Publish final output",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "step_10",
+      "step_name": "Publish final output",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "medium",
+      "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
+      "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    }
+  ],
+  "checkpoints": [
+    {
+      "step_id": "step_10",
+      "step_name": "Publish final output",
+      "checkpoint_type": "pre-flight review",
+      "priority": "required",
+      "rationale": "High blast radius with irreversible action requires human pre-approval",
+      "implementation_detail": "Human must approve before step executes; add approval queue with SLA target",
+      "estimated_daily_reviews": 500
+    },
+    {
+      "step_id": "step_10",
+      "step_name": "Publish final output",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    }
+  ],
+  "cost_report": {
+    "step_costs": [
+      {
+        "step_id": "step_02",
+        "step_name": "Classify primary intent",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 600,
+        "tokens_out_per_request": 100,
+        "cost_per_request": 0.0008799999999999999,
+        "daily_cost": 0.43999999999999995,
+        "monthly_cost": 13.2,
+        "annual_cost": 160.6
+      },
+      {
+        "step_id": "step_03",
+        "step_name": "Extract secondary attributes",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 800,
+        "tokens_out_per_request": 150,
+        "cost_per_request": 0.00124,
+        "daily_cost": 0.62,
+        "monthly_cost": 18.6,
+        "annual_cost": 226.3
+      },
+      {
+        "step_id": "step_05",
+        "step_name": "Score context relevance",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 2000,
+        "tokens_out_per_request": 200,
+        "cost_per_request": 0.0024000000000000002,
+        "daily_cost": 1.2000000000000002,
+        "monthly_cost": 36.00000000000001,
+        "annual_cost": 438.00000000000006
+      },
+      {
+        "step_id": "step_06",
+        "step_name": "Draft initial response",
+        "model": "claude-sonnet-4-20250514",
+        "tokens_in_per_request": 4000,
+        "tokens_out_per_request": 1000,
+        "cost_per_request": 0.027,
+        "daily_cost": 13.5,
+        "monthly_cost": 405.0,
+        "annual_cost": 4927.5
+      },
+      {
+        "step_id": "step_07",
+        "step_name": "Fact-check draft",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 3000,
+        "tokens_out_per_request": 300,
+        "cost_per_request": 0.0036,
+        "daily_cost": 1.8,
+        "monthly_cost": 54.0,
+        "annual_cost": 657.0
+      },
+      {
+        "step_id": "step_08",
+        "step_name": "Apply style and tone",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 1500,
+        "tokens_out_per_request": 800,
+        "cost_per_request": 0.0044,
+        "daily_cost": 2.2,
+        "monthly_cost": 66.0,
+        "annual_cost": 803.0000000000001
+      },
+      {
+        "step_id": "step_09",
+        "step_name": "Compliance filter",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 1000,
+        "tokens_out_per_request": 200,
+        "cost_per_request": 0.0016,
+        "daily_cost": 0.8,
+        "monthly_cost": 24.0,
+        "annual_cost": 292.0
+      }
+    ],
+    "total_token_daily": 20.56,
+    "total_token_monthly": 616.8,
+    "total_token_annual": 7504.400000000001,
+    "infra_cost": {
+      "snowflake_daily": 0.0,
+      "snowflake_monthly": 0.0,
+      "other_services_monthly": 0,
+      "total_infra_monthly": 0.0
+    },
+    "total_monthly": 616.8,
+    "total_annual": 7504.400000000001,
+    "cost_per_request": 0.04112,
+    "growth_projections": [
+      {
+        "month": 0,
+        "daily_volume": 500,
+        "token_monthly_cost": 616.8,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 616.8
+      },
+      {
+        "month": 1,
+        "daily_volume": 550,
+        "token_monthly_cost": 678.48,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 678.48
+      },
+      {
+        "month": 2,
+        "daily_volume": 605,
+        "token_monthly_cost": 746.3280000000001,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 746.3280000000001
+      },
+      {
+        "month": 3,
+        "daily_volume": 665,
+        "token_monthly_cost": 820.9608000000002,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 820.9608000000002
+      },
+      {
+        "month": 4,
+        "daily_volume": 732,
+        "token_monthly_cost": 903.0568800000002,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 903.0568800000002
+      },
+      {
+        "month": 5,
+        "daily_volume": 805,
+        "token_monthly_cost": 993.3625680000002,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 993.3625680000002
+      },
+      {
+        "month": 6,
+        "daily_volume": 885,
+        "token_monthly_cost": 1092.6988248000005,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1092.6988248000005
+      },
+      {
+        "month": 7,
+        "daily_volume": 974,
+        "token_monthly_cost": 1201.9687072800007,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1201.9687072800007
+      },
+      {
+        "month": 8,
+        "daily_volume": 1071,
+        "token_monthly_cost": 1322.165578008001,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1322.165578008001
+      },
+      {
+        "month": 9,
+        "daily_volume": 1178,
+        "token_monthly_cost": 1454.382135808801,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1454.382135808801
+      },
+      {
+        "month": 10,
+        "daily_volume": 1296,
+        "token_monthly_cost": 1599.8203493896813,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1599.8203493896813
+      },
+      {
+        "month": 11,
+        "daily_volume": 1426,
+        "token_monthly_cost": 1759.8023843286494,
+        "infra_monthly_cost": 0.0,
+        "total_monthly_cost": 1759.8023843286494
+      }
+    ],
+    "optimizations": []
+  },
+  "executive_summary": {
+    "workflow_name": "Tier 3C \u2014 Cascading Chain (Adversarial)",
+    "total_steps": 10,
+    "high_risk_steps": 0,
+    "checkpoints_required": 1,
+    "checkpoints_recommended": 0,
+    "failure_modes_high": 16,
+    "monthly_cost": 616.8,
+    "annual_cost": 7504.4,
+    "cost_per_request": 0.04112
+  }
+}

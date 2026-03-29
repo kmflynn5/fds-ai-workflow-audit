@@ -1,0 +1,3 @@
+step_id,step_name,model,tokens_in_per_request,tokens_out_per_request,cost_per_request,daily_cost,monthly_cost,annual_cost
+format_brief,Claude API formats decision-ready brief,claude-sonnet-4-20250514,8000,2000,0.054,0.054,1.6199999999999999,19.71
+parse_reply,Reply handler parses decisions,claude-sonnet-4-20250514,2000,500,0.0135,0.0135,0.40499999999999997,4.9275
