@@ -11,7 +11,7 @@
       "frequency": 3.0,
       "verifiability": 1.0,
       "cascading_risk": 3.0,
-      "composite": 1.38,
+      "composite": 1.57,
       "checkpoint_level": "none"
     },
     {
@@ -22,7 +22,7 @@
       "frequency": 3.0,
       "verifiability": 1.0,
       "cascading_risk": 3.0,
-      "composite": 1.88,
+      "composite": 2.14,
       "checkpoint_level": "none"
     },
     {
@@ -33,7 +33,7 @@
       "frequency": 3.0,
       "verifiability": 4.0,
       "cascading_risk": 2.0,
-      "composite": 1.88,
+      "composite": 2.14,
       "checkpoint_level": "none"
     },
     {
@@ -44,7 +44,7 @@
       "frequency": 3.0,
       "verifiability": 3.0,
       "cascading_risk": 1.0,
-      "composite": 1.62,
+      "composite": 1.86,
       "checkpoint_level": "none"
     }
   ],
@@ -90,12 +90,28 @@
       "mitigation": "Cross-reference generated output against raw source data; add validation gate between lookup and generation"
     },
     {
+      "step_id": "generate_answer",
+      "step_name": "Generate answer",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "log_query",
       "step_name": "Log query and answer",
       "failure_type": "context_degradation",
       "risk_level": "low",
       "rationale": "Short workflow; context degradation risk is minimal",
       "mitigation": "Standard context monitoring is sufficient"
+    },
+    {
+      "step_id": "log_query",
+      "step_name": "Log query and answer",
+      "failure_type": "metadata_inconsistency",
+      "risk_level": "medium",
+      "rationale": "Step is marked reversible=true but description contains write/mutation keywords \u2014 reversibility claim may be incorrect",
+      "mitigation": "Verify that a genuine rollback path exists; add automated rollback test; set reversible=false if rollback is not implemented"
     },
     {
       "step_id": "log_query",
@@ -120,6 +136,14 @@
       "risk_level": "medium",
       "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
       "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    },
+    {
+      "step_id": "log_query",
+      "step_name": "Log query and answer",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
     },
     {
       "step_id": "question_intake",

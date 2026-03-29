@@ -11,7 +11,7 @@
       "frequency": 1.0,
       "verifiability": 1.0,
       "cascading_risk": 4.0,
-      "composite": 1.25,
+      "composite": 1.43,
       "checkpoint_level": "none"
     },
     {
@@ -22,7 +22,7 @@
       "frequency": 1.0,
       "verifiability": 1.0,
       "cascading_risk": 3.0,
-      "composite": 1.38,
+      "composite": 1.57,
       "checkpoint_level": "none"
     },
     {
@@ -33,18 +33,18 @@
       "frequency": 1.0,
       "verifiability": 3.0,
       "cascading_risk": 3.0,
-      "composite": 1.38,
+      "composite": 1.57,
       "checkpoint_level": "none"
     },
     {
       "step_id": "enrich_and_update",
       "step_name": "Update CRM with enriched data",
-      "blast_radius": 2.0,
-      "reversibility": 1.0,
+      "blast_radius": 3.0,
+      "reversibility": 5.0,
       "frequency": 1.0,
-      "verifiability": 1.0,
+      "verifiability": 3.0,
       "cascading_risk": 2.0,
-      "composite": 1.25,
+      "composite": 3.14,
       "checkpoint_level": "none"
     },
     {
@@ -55,7 +55,7 @@
       "frequency": 1.0,
       "verifiability": 1.0,
       "cascading_risk": 1.0,
-      "composite": 0.88,
+      "composite": 1.0,
       "checkpoint_level": "none"
     }
   ],
@@ -101,6 +101,14 @@
       "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
     },
     {
+      "step_id": "ai_enrichment",
+      "step_name": "AI enrichment scoring",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "crm_read",
       "step_name": "Read CRM contacts",
       "failure_type": "cascading_failure",
@@ -115,6 +123,22 @@
       "risk_level": "low",
       "rationale": "Failure affects 1 downstream step",
       "mitigation": "Ensure the downstream step handles missing or malformed input gracefully"
+    },
+    {
+      "step_id": "enrich_and_update",
+      "step_name": "Update CRM with enriched data",
+      "failure_type": "metadata_inconsistency",
+      "risk_level": "high",
+      "rationale": "Description contains write/mutation keywords but step type is data_lookup \u2014 possible hidden write that bypasses risk controls",
+      "mitigation": "Audit step implementation; reclassify as ai_action if state-mutating; add write-confirmation logging and rollback capability"
+    },
+    {
+      "step_id": "enrich_and_update",
+      "step_name": "Update CRM with enriched data",
+      "failure_type": "silent_failure",
+      "risk_level": "high",
+      "rationale": "High-sensitivity data source may return valid-looking empty or stale data with no error signal",
+      "mitigation": "Add non-empty validation gate; alert on unexpectedly low record counts vs. baseline"
     },
     {
       "step_id": "firmographic_lookup",
@@ -254,7 +278,7 @@
     "high_risk_steps": 0,
     "checkpoints_required": 0,
     "checkpoints_recommended": 0,
-    "failure_modes_high": 1,
+    "failure_modes_high": 3,
     "monthly_cost": 0.06,
     "annual_cost": 0.73,
     "cost_per_request": 0.002

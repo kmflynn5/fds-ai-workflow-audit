@@ -8,10 +8,10 @@
       "step_name": "Scheduled batch trigger",
       "blast_radius": 1.0,
       "reversibility": 1.0,
-      "frequency": 2.0,
+      "frequency": 4.0,
       "verifiability": 1.0,
       "cascading_risk": 3.0,
-      "composite": 1.25,
+      "composite": 1.71,
       "checkpoint_level": "none"
     },
     {
@@ -19,10 +19,10 @@
       "step_name": "AI batch record processor",
       "blast_radius": 2.0,
       "reversibility": 5.0,
-      "frequency": 1.0,
+      "frequency": 4.0,
       "verifiability": 3.0,
       "cascading_risk": 3.0,
-      "composite": 2.62,
+      "composite": 3.43,
       "checkpoint_level": "none"
     },
     {
@@ -33,7 +33,7 @@
       "frequency": 1.0,
       "verifiability": 3.0,
       "cascading_risk": 2.0,
-      "composite": 2.5,
+      "composite": 2.86,
       "checkpoint_level": "none"
     },
     {
@@ -41,10 +41,10 @@
       "step_name": "Generate batch completion report",
       "blast_radius": 1.0,
       "reversibility": 1.0,
-      "frequency": 1.0,
+      "frequency": 3.0,
       "verifiability": 4.0,
       "cascading_risk": 1.0,
-      "composite": 1.25,
+      "composite": 1.71,
       "checkpoint_level": "none"
     }
   ],
@@ -90,6 +90,14 @@
       "mitigation": "Ensure prompt instructs the model to flag uncertainty rather than assume correctness"
     },
     {
+      "step_id": "batch_processor",
+      "step_name": "AI batch record processor",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "report",
       "step_name": "Generate batch completion report",
       "failure_type": "context_degradation",
@@ -120,6 +128,14 @@
       "risk_level": "low",
       "rationale": "No upstream classified or looked-up data to blindly confirm",
       "mitigation": "Ensure prompt instructs the model to flag uncertainty rather than assume correctness"
+    },
+    {
+      "step_id": "report",
+      "step_name": "Generate batch completion report",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
     },
     {
       "step_id": "trigger",

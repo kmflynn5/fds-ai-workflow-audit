@@ -1,2 +1,2 @@
 workflow_name,total_steps,high_risk_steps,checkpoints_required,checkpoints_recommended,failure_modes_high,monthly_cost,annual_cost,cost_per_request
-Tier 2C — Expense Processor,11,3,4,1,18,24520.0,298280.0,0.016347
+Tier 2C — Expense Processor,11,4,4,1,18,24520.0,298280.0,0.016347

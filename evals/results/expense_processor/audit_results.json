@@ -11,7 +11,7 @@
       "frequency": 5.0,
       "verifiability": 1.0,
       "cascading_risk": 5.0,
-      "composite": 2.12,
+      "composite": 2.43,
       "checkpoint_level": "none"
     },
     {
@@ -22,7 +22,7 @@
       "frequency": 5.0,
       "verifiability": 4.0,
       "cascading_risk": 5.0,
-      "composite": 2.75,
+      "composite": 3.14,
       "checkpoint_level": "none"
     },
     {
@@ -33,7 +33,7 @@
       "frequency": 5.0,
       "verifiability": 2.0,
       "cascading_risk": 5.0,
-      "composite": 2.5,
+      "composite": 2.86,
       "checkpoint_level": "none"
     },
     {
@@ -44,7 +44,7 @@
       "frequency": 5.0,
       "verifiability": 3.0,
       "cascading_risk": 5.0,
-      "composite": 4.12,
+      "composite": 4.71,
       "checkpoint_level": "required"
     },
     {
@@ -55,7 +55,7 @@
       "frequency": 5.0,
       "verifiability": 3.0,
       "cascading_risk": 5.0,
-      "composite": 4.12,
+      "composite": 4.71,
       "checkpoint_level": "required"
     },
     {
@@ -66,8 +66,8 @@
       "frequency": 5.0,
       "verifiability": 5.0,
       "cascading_risk": 4.0,
-      "composite": 3.75,
-      "checkpoint_level": "recommended"
+      "composite": 4.29,
+      "checkpoint_level": "required"
     },
     {
       "step_id": "notify_manager",
@@ -77,7 +77,7 @@
       "frequency": 5.0,
       "verifiability": 3.0,
       "cascading_risk": 1.0,
-      "composite": 2.12,
+      "composite": 2.43,
       "checkpoint_level": "none"
     },
     {
@@ -88,7 +88,7 @@
       "frequency": 5.0,
       "verifiability": 3.0,
       "cascading_risk": 3.0,
-      "composite": 2.38,
+      "composite": 2.71,
       "checkpoint_level": "none"
     },
     {
@@ -99,7 +99,7 @@
       "frequency": 5.0,
       "verifiability": 3.0,
       "cascading_risk": 3.0,
-      "composite": 2.38,
+      "composite": 2.71,
       "checkpoint_level": "none"
     },
     {
@@ -110,8 +110,8 @@
       "frequency": 4.0,
       "verifiability": 3.0,
       "cascading_risk": 2.0,
-      "composite": 3.38,
-      "checkpoint_level": "none"
+      "composite": 3.86,
+      "checkpoint_level": "recommended"
     },
     {
       "step_id": "close_expense_report",
@@ -121,7 +121,7 @@
       "frequency": 4.0,
       "verifiability": 3.0,
       "cascading_risk": 1.0,
-      "composite": 2.0,
+      "composite": 2.29,
       "checkpoint_level": "none"
     }
   ],
@@ -165,6 +165,14 @@
       "risk_level": "medium",
       "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
       "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    },
+    {
+      "step_id": "accounting_write",
+      "step_name": "Write to accounting system",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
     },
     {
       "step_id": "archive_receipt",
@@ -257,6 +265,14 @@
     {
       "step_id": "close_expense_report",
       "step_name": "Close expense report",
+      "failure_type": "metadata_inconsistency",
+      "risk_level": "medium",
+      "rationale": "Step is marked reversible=true but description contains write/mutation keywords \u2014 reversibility claim may be incorrect",
+      "mitigation": "Verify that a genuine rollback path exists; add automated rollback test; set reversible=false if rollback is not implemented"
+    },
+    {
+      "step_id": "close_expense_report",
+      "step_name": "Close expense report",
       "failure_type": "silent_failure",
       "risk_level": "medium",
       "rationale": "Action may complete successfully but with incorrect parameters",
@@ -319,6 +335,14 @@
       "mitigation": "Ensure prompt instructs the model to flag uncertainty rather than assume correctness"
     },
     {
+      "step_id": "extract_details",
+      "step_name": "Extract receipt details",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
       "step_id": "notify_employee",
       "step_name": "Notify employee of payment",
       "failure_type": "cascading_failure",
@@ -357,6 +381,14 @@
       "risk_level": "high",
       "rationale": "Generation step builds on classified/looked-up data \u2014 may confirm incorrect upstream data",
       "mitigation": "Cross-reference generated output against raw source data; add validation gate between lookup and generation"
+    },
+    {
+      "step_id": "notify_employee",
+      "step_name": "Notify employee of payment",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
     },
     {
       "step_id": "notify_manager",
@@ -457,6 +489,14 @@
     {
       "step_id": "update_hr_system",
       "step_name": "Update HR expense record",
+      "failure_type": "metadata_inconsistency",
+      "risk_level": "medium",
+      "rationale": "Step is marked reversible=true but description contains write/mutation keywords \u2014 reversibility claim may be incorrect",
+      "mitigation": "Verify that a genuine rollback path exists; add automated rollback test; set reversible=false if rollback is not implemented"
+    },
+    {
+      "step_id": "update_hr_system",
+      "step_name": "Update HR expense record",
       "failure_type": "silent_failure",
       "risk_level": "medium",
       "rationale": "Action may complete successfully but with incorrect parameters",
@@ -501,6 +541,14 @@
       "risk_level": "medium",
       "rationale": "Step depth or workflow length increases specification drift risk",
       "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "validate_policy",
+      "step_name": "Validate against expense policy",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
     }
   ],
   "checkpoints": [
@@ -559,6 +607,15 @@
       "estimated_daily_reviews": null
     },
     {
+      "step_id": "archive_receipt",
+      "step_name": "Archive receipt for audit",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
       "step_id": "audit_log",
       "step_name": "Write audit log entry",
       "checkpoint_type": "periodic calibration",
@@ -588,6 +645,24 @@
     {
       "step_id": "payment",
       "step_name": "Execute reimbursement payment",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "update_hr_system",
+      "step_name": "Update HR expense record",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "validate_policy",
+      "step_name": "Validate against expense policy",
       "checkpoint_type": "periodic calibration",
       "priority": "suggested",
       "rationale": "Long workflow benefits from periodic specification re-injection",
@@ -745,7 +820,7 @@
   "executive_summary": {
     "workflow_name": "Tier 2C \u2014 Expense Processor",
     "total_steps": 11,
-    "high_risk_steps": 3,
+    "high_risk_steps": 4,
     "checkpoints_required": 4,
     "checkpoints_recommended": 1,
     "failure_modes_high": 18,
