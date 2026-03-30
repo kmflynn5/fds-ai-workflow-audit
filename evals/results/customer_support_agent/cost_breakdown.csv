@@ -1,0 +1,8 @@
+step_id,step_name,model,tokens_in_per_request,tokens_out_per_request,cost_per_request,daily_cost,monthly_cost,annual_cost
+classify,Classify intent,claude-haiku-4-5,500,50,0.0006000000000000001,60.00000000000001,1800.0000000000002,21900.000000000004
+sentiment,Score customer sentiment,claude-haiku-4-5,800,100,0.0010400000000000001,104.00000000000001,3120.0000000000005,37960.00000000001
+escalation_check,Escalation decision,claude-haiku-4-5,300,50,0.00043999999999999996,43.99999999999999,1319.9999999999998,16059.999999999998
+resolve,Execute account resolution,claude-sonnet-4-20250514,2000,600,0.015,1500.0,45000.0,547500.0
+respond,Generate customer response,claude-haiku-4-5,800,300,0.00184,184.0,5520.0,67160.0
+format_response,Format and brand response,claude-haiku-4-5,500,300,0.0015999999999999999,160.0,4800.0,58400.0
+log_interaction,Log interaction to CRM,claude-haiku-4-5,500,200,0.0012000000000000001,120.00000000000001,3600.0000000000005,43800.00000000001

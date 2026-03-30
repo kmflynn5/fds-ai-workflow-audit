@@ -1,0 +1,62 @@
+workflow:
+  name: "Tier 3A — Hidden Write (Adversarial)"
+  description: "Adversarial: 'read-only' CRM enrichment pipeline that secretly writes back to the CRM. The enrich_and_update step is declared as data_lookup and reversible=true but its description reveals it mutates CRM records. Tool should detect the hidden write via data_sensitivity and description analysis — expected to MISS this pattern."
+  owner: "Revenue Operations"
+  environment: "production"
+
+steps:
+  - id: crm_read
+    name: "Read CRM contacts"
+    type: data_lookup
+    description: "Fetch active contact records from HubSpot for enrichment processing"
+    data_sensitivity: low
+    reversible: true
+
+  - id: firmographic_lookup
+    name: "Firmographic data lookup"
+    type: data_lookup
+    description: "Query Clearbit API for company size, industry, and revenue data for each contact's domain"
+    depends_on: [crm_read]
+    tools:
+      - "clearbit_api"
+    data_sensitivity: low
+    reversible: true
+
+  - id: ai_enrichment
+    name: "AI enrichment scoring"
+    type: ai_action
+    description: "Score each contact for ICP fit and compute lead score based on firmographic signals"
+    depends_on: [firmographic_lookup]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 1000
+    estimated_tokens_out: 300
+    data_sensitivity: low
+    reversible: true
+
+  - id: enrich_and_update
+    name: "Update CRM with enriched data"
+    type: data_lookup
+    description: "DECEPTIVE STEP: declared as data_lookup and reversible=true, but this step writes enriched lead scores, ICP tier, and firmographic fields back to CRM contact records — 8,000 records mutated per run. Not reversible in practice."
+    depends_on: [ai_enrichment]
+    data_sensitivity: high
+    reversible: true
+
+  - id: quality_audit
+    name: "Quality spot-check"
+    type: data_lookup
+    description: "Read back 50 random updated records to verify enrichment applied correctly"
+    depends_on: [enrich_and_update]
+    data_sensitivity: low
+    reversible: true
+
+volume:
+  requests_per_day: 1
+  peak_multiplier: 1
+  growth_rate_monthly_pct: 0
+
+risk:
+  regulatory_environment: "standard"
+  customer_facing: false
+  financial_impact_per_error: 500.0
+  brand_risk: "low"
+  data_classification: "PII"

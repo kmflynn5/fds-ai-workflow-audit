@@ -1,0 +1,131 @@
+workflow:
+  name: "Tier 3C — Cascading Chain (Adversarial)"
+  description: "Adversarial: 10-step linear AI chain with no validation gates between steps. Each step operates at ~85% accuracy. Compound accuracy = 0.85^10 ≈ 20% — 80% of outputs are wrong by the final step. Tool should flag compound error rate but only computes per-step cascading risk; compound degradation is expected to be a MISS."
+  owner: "ML Pipeline Team"
+  environment: "production"
+
+steps:
+  - id: step_01
+    name: "Ingest and normalize input"
+    type: ai_action
+    description: "Parse raw input, normalize fields, and extract structured entities. Accuracy: ~85% (15% extraction errors propagate downstream)"
+    error_consequence: "Malformed input propagates through all 9 downstream steps"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: step_02
+    name: "Classify primary intent"
+    type: ai_classification
+    description: "Classify normalized input into one of 12 intent categories. Accuracy: ~85% on normalized input"
+    depends_on: [step_01]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 600
+    estimated_tokens_out: 100
+    error_consequence: "Wrong intent class drives wrong resolution path for remaining 8 steps"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: step_03
+    name: "Extract secondary attributes"
+    type: ai_classification
+    description: "Extract sub-attributes from the classified intent (urgency, sentiment, domain). Accuracy: ~85% on correctly classified inputs"
+    depends_on: [step_02]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 800
+    estimated_tokens_out: 150
+    error_consequence: "Incorrect attributes drive wrong priority and routing for 7 downstream steps"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: step_04
+    name: "Retrieve relevant context"
+    type: data_lookup
+    description: "Vector search for relevant documents based on extracted intent and attributes"
+    depends_on: [step_03]
+    tools:
+      - "vector_db_api"
+    error_consequence: "Wrong context retrieved — generation step answers from irrelevant documents"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: step_05
+    name: "Score context relevance"
+    type: ai_classification
+    description: "Re-rank and filter retrieved documents for relevance. Accuracy: ~85% on correct context"
+    depends_on: [step_04]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 2000
+    estimated_tokens_out: 200
+    error_consequence: "Irrelevant documents kept or relevant ones dropped — generation quality degrades"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: step_06
+    name: "Draft initial response"
+    type: ai_generation
+    description: "Generate initial response draft based on filtered context. Compound accuracy at this point: ~0.85^5 ≈ 44%"
+    depends_on: [step_05]
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 4000
+    estimated_tokens_out: 1000
+    error_consequence: "Incorrect or hallucinated draft — post-processing cannot recover if core facts are wrong"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: step_07
+    name: "Fact-check draft"
+    type: ai_classification
+    description: "Verify factual claims in draft against source documents. Accuracy: ~85% (checker itself can be fooled by confidently wrong drafts)"
+    depends_on: [step_06]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 3000
+    estimated_tokens_out: 300
+    error_consequence: "False positive: incorrect facts marked correct. Compound accuracy: ~0.85^6 ≈ 38%"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: step_08
+    name: "Apply style and tone"
+    type: ai_generation
+    description: "Rewrite draft to match brand voice and target audience. Accuracy: ~85% on factually-sound input"
+    depends_on: [step_07]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 1500
+    estimated_tokens_out: 800
+    error_consequence: "Off-brand or wrong-register output. Compound accuracy: ~0.85^7 ≈ 32%"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: step_09
+    name: "Compliance filter"
+    type: ai_classification
+    description: "Check for regulatory compliance issues and required disclosures. Accuracy: ~85% on correctly styled content"
+    depends_on: [step_08]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 1000
+    estimated_tokens_out: 200
+    error_consequence: "Non-compliant content passes filter. Compound accuracy: ~0.85^8 ≈ 27%"
+    reversible: true
+    data_sensitivity: medium
+
+  - id: step_10
+    name: "Publish final output"
+    type: ai_action
+    description: "Publish finalized content to production. Compound accuracy at publish: ~0.85^10 ≈ 20% — 80% of published content has at least one error from the chain"
+    depends_on: [step_09]
+    error_consequence: "Incorrect, non-compliant, or hallucinated content published to production users"
+    reversible: false
+    customer_facing: true
+    data_sensitivity: high
+
+volume:
+  requests_per_day: 500
+  peak_multiplier: 2.0
+  growth_rate_monthly_pct: 10.0
+
+risk:
+  regulatory_environment: "regulated"
+  customer_facing: true
+  financial_impact_per_error: 1000.0
+  brand_risk: "high"
+  data_classification: "PII"

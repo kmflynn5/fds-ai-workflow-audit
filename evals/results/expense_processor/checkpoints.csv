@@ -1,0 +1,14 @@
+step_id,step_name,checkpoint_type,priority,rationale,implementation_detail,estimated_daily_reviews
+accounting_write,Write to accounting system,pre-flight review,required,High blast radius with irreversible action requires human pre-approval,Human must approve before step executes; add approval queue with SLA target,50000
+audit_log,Write audit log entry,pre-flight review,required,High blast radius with irreversible action requires human pre-approval,Human must approve before step executes; add approval queue with SLA target,50000
+notify_employee,Notify employee of payment,pre-flight review,required,High blast radius with irreversible action requires human pre-approval,Human must approve before step executes; add approval queue with SLA target,50000
+payment,Execute reimbursement payment,pre-flight review,required,High blast radius with irreversible action requires human pre-approval,Human must approve before step executes; add approval queue with SLA target,50000
+notify_employee,Notify employee of payment,sampling audit,recommended,Customer-facing output with low verifiability needs regular human sampling,Review 5-10% sample of outputs daily; flag anomalies for full review,3750
+accounting_write,Write to accounting system,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+archive_receipt,Archive receipt for audit,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+audit_log,Write audit log entry,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+extract_details,Extract receipt details,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+notify_employee,Notify employee of payment,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+payment,Execute reimbursement payment,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+update_hr_system,Update HR expense record,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,
+validate_policy,Validate against expense policy,periodic calibration,suggested,Long workflow benefits from periodic specification re-injection,Weekly eval review; monthly spec refresh; compare output drift against baseline,

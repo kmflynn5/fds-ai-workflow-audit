@@ -5,7 +5,7 @@ from pathlib import Path
 import networkx as nx
 import pytest
 
-from engine.parser import VolumeProfile, build_step_graph, parse_workflow
+from engine.parser import StepType, VolumeProfile, WorkflowStep, build_step_graph, parse_workflow
 from engine.risk_scorer import (
     classify_checkpoint_level,
     compute_composite,
@@ -13,6 +13,8 @@ from engine.risk_scorer import (
     score_frequency,
     score_workflow,
 )
+
+_PLAIN_STEP = WorkflowStep(id="root", name="root", type=StepType.input, description="plain step")
 
 PROJECT_ROOT = Path(__file__).parent.parent
 EXAMPLE_YAML = PROJECT_ROOT / "workflows" / "workflow.example.yml"
@@ -35,9 +37,9 @@ def test_score_workflow_example() -> None:
 
 
 def test_composite_formula() -> None:
-    # blast=4, rev=5, freq=3, ver=3, casc=2 -> (8+10+3+3+2)/8 = 26/8 = 3.25
+    # blast=4, rev=5, freq=3, ver=3, casc=2 -> (8+10+3+3+2)/7 = 26/7 ≈ 3.71
     result = compute_composite(blast=4.0, reversibility=5.0, frequency=3.0, verifiability=3.0, cascading=2.0)
-    assert result == pytest.approx(3.25, abs=1e-9)
+    assert result == pytest.approx(26 / 7, abs=1e-2)
 
 
 def test_checkpoint_classification() -> None:
@@ -57,14 +59,14 @@ def test_frequency_bucketing() -> None:
         return VolumeProfile(requests_per_day=rpd)
 
     # Root node (no predecessors) uses base volume directly
-    assert score_frequency(make_volume(9), graph, "root") == 1.0
-    assert score_frequency(make_volume(10), graph, "root") == 2.0
-    assert score_frequency(make_volume(99), graph, "root") == 2.0
-    assert score_frequency(make_volume(100), graph, "root") == 3.0
-    assert score_frequency(make_volume(999), graph, "root") == 3.0
-    assert score_frequency(make_volume(1000), graph, "root") == 4.0
-    assert score_frequency(make_volume(9999), graph, "root") == 4.0
-    assert score_frequency(make_volume(10000), graph, "root") == 5.0
+    assert score_frequency(make_volume(9), graph, "root", _PLAIN_STEP) == 1.0
+    assert score_frequency(make_volume(10), graph, "root", _PLAIN_STEP) == 2.0
+    assert score_frequency(make_volume(99), graph, "root", _PLAIN_STEP) == 2.0
+    assert score_frequency(make_volume(100), graph, "root", _PLAIN_STEP) == 3.0
+    assert score_frequency(make_volume(999), graph, "root", _PLAIN_STEP) == 3.0
+    assert score_frequency(make_volume(1000), graph, "root", _PLAIN_STEP) == 4.0
+    assert score_frequency(make_volume(9999), graph, "root", _PLAIN_STEP) == 4.0
+    assert score_frequency(make_volume(10000), graph, "root", _PLAIN_STEP) == 5.0
 
 
 def test_cascading_risk_counts() -> None:

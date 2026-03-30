@@ -60,6 +60,9 @@ class WorkflowStep(BaseModel):
     depends_on: list[str] = Field(default_factory=list)
     branches: dict[str, str] | None = None
     tools: list[str] = Field(default_factory=list)
+    iterations_per_request: int = 1
+    has_graceful_fallback: bool = False
+    cross_workflow_dependency: bool = False
 
 
 class WorkflowMetadata(BaseModel):

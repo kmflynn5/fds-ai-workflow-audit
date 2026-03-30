@@ -1,13 +1,41 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import StrEnum
 
 import networkx as nx
 
-from engine.parser import StepType, WorkflowConfig, WorkflowStep
+from engine.parser import DataSensitivity, StepType, WorkflowConfig, WorkflowStep
 
 _AI_TYPES = {StepType.ai_generation, StepType.ai_classification, StepType.ai_action}
+
+# Fix #6: words that indicate mutation/write behaviour
+_WRITE_KEYWORDS = frozenset(
+    {
+        "write",
+        "writes",
+        "update",
+        "updates",
+        "create",
+        "creates",
+        "modify",
+        "modifies",
+        "insert",
+        "inserts",
+        "mutate",
+        "mutates",
+        "upsert",
+        "upserts",
+        "delete",
+        "deletes",
+    }
+)
+
+
+def _has_write_signal(step: WorkflowStep) -> bool:
+    words = set(re.findall(r"\b\w+\b", step.description.lower()))
+    return bool(words & _WRITE_KEYWORDS)
 
 
 class FailureType(StrEnum):
@@ -17,6 +45,7 @@ class FailureType(StrEnum):
     tool_selection_error = "tool_selection_error"
     cascading_failure = "cascading_failure"
     silent_failure = "silent_failure"
+    metadata_inconsistency = "metadata_inconsistency"
 
 
 class RiskLevel(StrEnum):
@@ -144,6 +173,17 @@ def assess_tool_selection_error(step: WorkflowStep) -> FailureMapping | None:
     """Assess risk of the model choosing the wrong tool from those available."""
     n = len(step.tools)
     if n == 0:
+        # Fix #4: AI classification/action/generation with a model but no tools still has
+        # tool-selection risk — the model must structure its output entirely without constraints.
+        if step.model is not None and step.type in _AI_TYPES:
+            return FailureMapping(
+                step_id=step.id,
+                step_name=step.name,
+                failure_type=FailureType.tool_selection_error,
+                risk_level=RiskLevel.low,
+                rationale="AI step has no tool constraints — output format entirely model-guided",
+                mitigation="Define explicit output schema (Pydantic, JSON Schema) and validate against it",
+            )
         return None
 
     if n >= 3:
@@ -174,20 +214,34 @@ def assess_tool_selection_error(step: WorkflowStep) -> FailureMapping | None:
 def assess_cascading_failure(step: WorkflowStep, graph: nx.DiGraph) -> FailureMapping | None:
     """Assess how many downstream steps would be affected by a failure here."""
     n = len(nx.descendants(graph, step.id))
-    if n == 0:
+
+    # Fix #5: terminal steps with cross-workflow dependency still have cascading risk
+    if n == 0 and not step.cross_workflow_dependency:
         return None
 
-    if n >= 4:
-        risk = RiskLevel.high
-        rationale = f"Failure cascades to {n} downstream steps"
-        mitigation = "Add per-step validation gate; implement circuit breaker pattern"
-    elif n >= 2:
+    effective_n = n if n > 0 else 2  # cross-workflow dependency floor
+
+    if effective_n >= 4:
+        # Fix #3: downgrade to MEDIUM for steps with documented graceful degradation
+        if step.has_graceful_fallback:
+            risk = RiskLevel.medium
+            rationale = f"Failure cascades to {n} downstream steps; documented graceful degradation limits blast radius"
+            mitigation = "Verify fallback path is tested and monitored; track fallback activation rate"
+        else:
+            risk = RiskLevel.high
+            rationale = f"Failure cascades to {n} downstream steps"
+            mitigation = "Add per-step validation gate; implement circuit breaker pattern"
+    elif effective_n >= 2:
         risk = RiskLevel.medium
-        rationale = f"Failure propagates to {n} downstream steps"
-        mitigation = "Add output validation at this step; define a fallback branch for failure cases"
+        if n == 0:
+            rationale = "Terminal step with cross-workflow dependency — failure corrupts future workflow runs"
+            mitigation = "Add write-confirmation check; monitor downstream workflow input quality"
+        else:
+            rationale = f"Failure propagates to {n} downstream steps"
+            mitigation = "Add output validation at this step; define a fallback branch for failure cases"
     else:
         risk = RiskLevel.low
-        rationale = f"Failure affects {n} downstream step"
+        rationale = f"Failure affects {effective_n} downstream step"
         mitigation = "Ensure the downstream step handles missing or malformed input gracefully"
 
     return FailureMapping(
@@ -218,6 +272,14 @@ def assess_silent_failure(step: WorkflowStep) -> FailureMapping | None:
         risk = RiskLevel.low
         rationale = "Customer-facing classification may silently misroute without visible error"
         mitigation = "Expose classification confidence scores; alert when confidence falls below threshold"
+    # Fix #1: data_lookup with high/critical sensitivity can return valid-looking empty/stale data
+    elif step.type == StepType.data_lookup and step.data_sensitivity in (
+        DataSensitivity.high,
+        DataSensitivity.critical,
+    ):
+        risk = RiskLevel.high
+        rationale = "High-sensitivity data source may return valid-looking empty or stale data with no error signal"
+        mitigation = "Add non-empty validation gate; alert on unexpectedly low record counts vs. baseline"
     else:
         return None
 
@@ -229,6 +291,49 @@ def assess_silent_failure(step: WorkflowStep) -> FailureMapping | None:
         rationale=rationale,
         mitigation=mitigation,
     )
+
+
+def assess_metadata_inconsistency(step: WorkflowStep) -> FailureMapping | None:
+    """Flag steps whose description contradicts their declared type or reversibility.
+
+    Fix #6: detects hidden writes in steps declared as data_lookup or reversible=True.
+    """
+    if not _has_write_signal(step):
+        return None
+
+    if step.type == StepType.data_lookup:
+        return FailureMapping(
+            step_id=step.id,
+            step_name=step.name,
+            failure_type=FailureType.metadata_inconsistency,
+            risk_level=RiskLevel.high,
+            rationale=(
+                "Description contains write/mutation keywords but step type is data_lookup — "
+                "possible hidden write that bypasses risk controls"
+            ),
+            mitigation=(
+                "Audit step implementation; reclassify as ai_action if state-mutating; "
+                "add write-confirmation logging and rollback capability"
+            ),
+        )
+
+    if step.reversible and step.type in _AI_TYPES:
+        return FailureMapping(
+            step_id=step.id,
+            step_name=step.name,
+            failure_type=FailureType.metadata_inconsistency,
+            risk_level=RiskLevel.medium,
+            rationale=(
+                "Step is marked reversible=true but description contains write/mutation keywords — "
+                "reversibility claim may be incorrect"
+            ),
+            mitigation=(
+                "Verify that a genuine rollback path exists; add automated rollback test; "
+                "set reversible=false if rollback is not implemented"
+            ),
+        )
+
+    return None
 
 
 def map_failures(config: WorkflowConfig, graph: nx.DiGraph) -> list[FailureMapping]:
@@ -244,6 +349,7 @@ def map_failures(config: WorkflowConfig, graph: nx.DiGraph) -> list[FailureMappi
             assess_tool_selection_error(step),
             assess_cascading_failure(step, graph),
             assess_silent_failure(step),
+            assess_metadata_inconsistency(step),
         ]
         results.extend(a for a in assessments if a is not None)
 

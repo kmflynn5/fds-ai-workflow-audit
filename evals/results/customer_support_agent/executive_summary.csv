@@ -1,0 +1,2 @@
+workflow_name,total_steps,high_risk_steps,checkpoints_required,checkpoints_recommended,failure_modes_high,monthly_cost,annual_cost,cost_per_request
+Tier 2A — Customer Support Agent,12,4,4,2,18,67110.0,816180.0,0.02237

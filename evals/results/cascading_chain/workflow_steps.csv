@@ -1,0 +1,11 @@
+step_id,name,type,model,depends_on,customer_facing,reversible,data_sensitivity
+step_01,Ingest and normalize input,ai_action,,,False,True,medium
+step_02,Classify primary intent,ai_classification,claude-haiku-4-5,step_01,False,True,medium
+step_03,Extract secondary attributes,ai_classification,claude-haiku-4-5,step_02,False,True,medium
+step_04,Retrieve relevant context,data_lookup,,step_03,False,True,medium
+step_05,Score context relevance,ai_classification,claude-haiku-4-5,step_04,False,True,medium
+step_06,Draft initial response,ai_generation,claude-sonnet-4-20250514,step_05,False,True,medium
+step_07,Fact-check draft,ai_classification,claude-haiku-4-5,step_06,False,True,medium
+step_08,Apply style and tone,ai_generation,claude-haiku-4-5,step_07,False,True,medium
+step_09,Compliance filter,ai_classification,claude-haiku-4-5,step_08,False,True,medium
+step_10,Publish final output,ai_action,,step_09,True,False,high
