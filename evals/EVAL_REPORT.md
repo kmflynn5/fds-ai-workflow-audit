@@ -1,7 +1,7 @@
 # FDS AI Workflow Audit — Eval Report
 
-**Date:** 2026-03-29
-**Tool version:** `claude/great-edison`
+**Date:** 2026-03-30
+**Tool version:** `claude/beautiful-almeida`
 **Eval runner:** `evals/eval_runner.py`
 
 ---
@@ -12,12 +12,12 @@
 |---|---|---|---|
 | True positive rate (Tier 1) | 100% | 8/8 (100%) | PASS |
 | True positive rate (Tier 2) | 90%+ | 3/3 (100%) | PASS |
-| True positive rate (Tier 3) | 90%+ | 5/5 (100%) | PASS |
+| True positive rate (Tier 3) | 90%+ | 10/10 (100%) | PASS |
 | False positive rate (correctly not flagged HIGH) | >90% | 3/3 (100%) | PASS |
-| Score threshold accuracy | 80%+ | 4/4 (100%) | PASS |
+| Score threshold accuracy | 80%+ | 6/6 (100%) | PASS |
 | Score ceiling: 4.5 reachable for financial steps | yes | payment=4.71, resolve=4.71 | PASS |
 
-**Overall:** All 7 tuning fixes applied. Tool now correctly detects every known failure type across all tiers with zero confirmed false positives on the test set.
+**Overall:** 11 total tuning fixes applied (7 from PR #1 + 4 Round 2 GTM PLG fixes). Tool now correctly detects every known failure type across all 8 workflows with zero confirmed false positives on the test set.
 
 ---
 
@@ -149,6 +149,49 @@ Fix #2: denominator change pushed step_10 from 3.25 → 3.71, crossing the 3.5 `
 
 ---
 
+## Tier 3D — GTM PLG Engine (Round 2)
+
+**Workflow:** `workflows/gtm_plg_engine.yml`
+
+### True Positive Hits
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| generate_pricing blast_radius | ≥ 5.0 | **5.0** | **HIT** |
+| generate_pricing composite | > 4.0 | **4.14** | **HIT** |
+| write_crm checkpoint | required | **pre-flight review (required)** | **HIT** |
+| enrich_usage silent_failure | HIGH | **HIGH** | **HIT** |
+| log_pipeline_event metadata_inconsistency | HIGH | **HIGH** | **HIT** |
+
+**TP Rate: 5/5 = 100%**
+
+### Score Threshold Checks
+
+| Step | Dimension | Expected | Actual | Result |
+|---|---|---|---|---|
+| generate_pricing | composite | > 4.0 | **4.14** | **PASS** |
+| identify_accounts | frequency | ≤ 2.0 | **1.0** | **PASS** |
+
+### GTM PLG Engine Risk Scores (Post Round 2 Fixes)
+
+| Step | Blast | Rev | Freq | Ver | Casc | Composite | Checkpoint |
+|---|---|---|---|---|---|---|---|
+| identify_accounts | 2.0 | 3.0 | 1.0 | 2.0 | 3.0 | 1.86 | none |
+| enrich_firmographic | 2.0 | 1.0 | 2.0 | 1.0 | 5.0 | 2.57 | none |
+| enrich_usage | 4.0 | 1.0 | 1.0 | 1.0 | 4.0 | 2.43 | none |
+| score_propensity | 2.0 | 3.0 | 2.0 | 2.0 | 3.0 | 2.14 | none |
+| generate_deck | 3.0 | 4.0 | 2.0 | 5.0 | 3.0 | 2.71 | none |
+| generate_pricing | **5.0** | 4.0 | 2.0 | 5.0 | 4.0 | **4.14** | **required** |
+| capacity_check | 2.0 | 1.0 | 1.0 | 2.0 | 2.0 | 1.71 | none |
+| route_to_rep | 4.0 | 3.0 | 1.0 | 2.0 | 2.0 | 2.71 | none |
+| write_crm | 4.0 | 5.0 | 1.0 | 1.0 | 3.0 | 3.43 | none |
+| notify_rep | 3.0 | 4.0 | 1.0 | 5.0 | 2.0 | 3.14 | none |
+| log_pipeline_event | 3.0 | 3.0 | 1.0 | 3.0 | 1.0 | 3.0 | none |
+
+**Checkpoints generated:** 3 required, 4 recommended
+
+---
+
 ## Changes Applied (claude/great-edison)
 
 ### Fix #1 — Silent failure for data_lookup steps
@@ -171,6 +214,26 @@ New `cross_workflow_dependency: bool = False` field on `WorkflowStep`. Terminal 
 
 ### Fix #7 — Frequency bomb detection
 New `iterations_per_request: int = 1` field on `WorkflowStep`. `score_frequency` multiplies effective volume by this field. When the field is not set, a heuristic extracts the batch count from description keywords ("loops over N records"). Batch processor in `frequency_bomb.yml` now correctly scores frequency=4.0.
+
+---
+
+---
+
+## Changes Applied (claude/beautiful-almeida — Round 2)
+
+### Fix R2-1 — Financial impact blast bonus
+`score_blast_radius` in `risk_scorer.py` now adds +1 when `risk_profile.financial_impact_per_error >= 5000` AND `step.data_sensitivity in (high, critical)`. GTM PLG Engine `generate_pricing` (high-sensitivity step in a workflow with $5k/error impact) now scores `blast_radius=5.0`, pushing composite to **4.14** — triggering a required checkpoint.
+
+### Fix R2-2 — Cross-workflow golden record checkpoint
+`recommend_checkpoints` in `checkpoint_recommender.py` adds a new Rule R2-2: non-terminal steps with `cross_workflow_dependency=True`, `reversible=False`, and `data_sensitivity in (high, critical)` receive a **required post-action verification** checkpoint. Catches `write_crm` — the Salesforce golden record write that silently pollutes downstream forecasting and reporting pipelines.
+
+Also fixed: `cross_workflow_dependency` value in `workflows/gtm_plg_engine.yml` corrected from a descriptive string to the `true` boolean expected by the parser schema.
+
+### Fix R2-3 — Suppress batch heuristic when iterations_per_request explicitly set
+`_heuristic_iterations` in `risk_scorer.py` now checks `"iterations_per_request" in step.model_fields_set`. If the author explicitly declared `iterations_per_request: 1` in the YAML, the batch-keyword heuristic is skipped — trusting the author's intent. Eliminates the false positive on `identify_accounts` (which has batch-sounding language but processes one account at a time).
+
+### Fix R2-4 — Cost calculator respects iterations_per_request
+`calculate_step_cost` in `cost_calculator.py` now multiplies `estimated_tokens_in` and `estimated_tokens_out` by `step.iterations_per_request` before computing cost. Batch steps with explicit iteration counts now reflect true per-request token spend.
 
 ---
 

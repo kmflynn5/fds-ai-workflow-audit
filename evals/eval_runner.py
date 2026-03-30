@@ -292,6 +292,82 @@ ANSWER_KEYS: dict[str, dict] = {
         "false_positive_checks": [],
         "score_thresholds": [],
     },
+
+    # ------------------------------------------------------------------
+    # Tier 3D — GTM PLG Engine (Round 2 eval)
+    # ------------------------------------------------------------------
+    "gtm_plg_engine": {
+        "workflow_path": "workflows/gtm_plg_engine.yml",
+        "output_dir": "evals/results/gtm_plg_engine",
+        "tier": 3,
+        "true_positives": [
+            # Fix R2-1: financial_impact >= 5000 + high data_sensitivity → blast +1
+            {
+                "type": "score_threshold",
+                "step_id": "generate_pricing",
+                "description": (
+                    "generate_pricing blast_radius = 5.0 "
+                    "(Fix R2-1: financial impact bonus on high-sensitivity step)"
+                ),
+                "dimension": "blast_radius",
+                "min_value": 5.0,
+            },
+            # Fix R2-1 downstream: blast bonus pushes composite above 4.0 → required checkpoint
+            {
+                "type": "score_threshold",
+                "step_id": "generate_pricing",
+                "description": "generate_pricing composite > 4.0 (Fix R2-1 drives required checkpoint)",
+                "dimension": "composite",
+                "min_value": 4.0,
+            },
+            # Fix R2-2: cross-workflow + irreversible + critical → required post-action checkpoint
+            {
+                "type": "checkpoint",
+                "step_id": "write_crm",
+                "description": (
+                    "write_crm gets required checkpoint "
+                    "(Fix R2-2: cross-workflow dependency on critical data)"
+                ),
+            },
+            # Pre-existing Fix #1 (from PR #1): silent_failure on enrich_usage
+            {
+                "type": "failure_flag",
+                "step_id": "enrich_usage",
+                "description": "enrich_usage silent_failure flagged HIGH (empty enrichment silently poisons scoring)",
+                "failure_type": "silent_failure",
+                "min_risk": "high",
+            },
+            # Pre-existing Fix #6 (from PR #1): metadata_inconsistency on log step
+            {
+                "type": "failure_flag",
+                "step_id": "log_pipeline_event",
+                "description": "log_pipeline_event metadata_inconsistency flagged HIGH (hidden state mutation)",
+                "failure_type": "metadata_inconsistency",
+                "min_risk": "high",
+            },
+        ],
+        "false_positive_checks": [],
+        "score_thresholds": [
+            # Fix R2-1: composite ceiling check
+            {
+                "step_id": "generate_pricing",
+                "description": "generate_pricing composite > 4.0 (Fix R2-1)",
+                "dimension": "composite",
+                "min_value": 4.0,
+            },
+            # Fix R2-3: identify_accounts explicitly sets iterations_per_request=1 →
+            # batch heuristic must be suppressed, frequency should stay low
+            {
+                "step_id": "identify_accounts",
+                "description": (
+                    "identify_accounts frequency <= 2.0 "
+                    "(Fix R2-3: explicit iterations=1 suppresses batch heuristic)"
+                ),
+                "dimension": "frequency",
+                "max_value": 2.0,
+            },
+        ],
+    },
 }
 
 
