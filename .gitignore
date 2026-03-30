@@ -215,3 +215,6 @@ output/*.csv
 evidence/node_modules/
 evidence/.evidence/
 evidence/build/
+
+# Claude Code worktree management
+.claude/

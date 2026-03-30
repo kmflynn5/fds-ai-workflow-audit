@@ -1,0 +1,245 @@
+# GTM PLG Engine — AI-Powered Sales Pipeline
+# Based on the Pinecone/Avery Lewis GTM prototype architecture
+# and the FDS fds-gtm-ai-rev-engine proof of concept
+#
+# Narrative context: Pinecone's sales team uses Claude Code to build
+# prototype GTM tools at speed — dynamic account segmentation,
+# micro-SaaS sales decks, auto-generated pricing proposals pulling
+# live Salesforce data. The prototypes work. The problem is the
+# "last mile": getting them into production with guardrails,
+# evaluation, and cost controls.
+#
+# This workflow models the full pipeline from freemium account
+# identification through enrichment, scoring, content generation,
+# and CRM write-back.
+
+workflow:
+  name: "GTM PLG Engine — Freemium-to-Enterprise Pipeline"
+  description: >
+    AI-powered sales pipeline that identifies high-potential freemium accounts,
+    enriches them with firmographic and usage data, scores expansion propensity,
+    generates personalized outreach (micro-SaaS sales decks + pricing proposals),
+    and routes qualified leads to sales reps with capacity awareness.
+    The AI never overwhelms the team it's supposed to help.
+  owner: "Revenue Operations"
+  environment: "production"
+
+steps:
+  - id: identify_accounts
+    name: "Identify expansion-ready freemium accounts"
+    type: data_lookup
+    description: >
+      Query Salesforce for freemium accounts meeting expansion criteria:
+      usage above threshold, team size > 5, active in last 30 days.
+      Returns batch of 50-200 accounts per daily run.
+    data_sensitivity: medium
+    error_consequence: "Missed expansion opportunities or false positives flooding the pipeline"
+    reversible: true
+    has_graceful_fallback: false
+    iterations_per_request: 1
+
+  - id: enrich_firmographic
+    name: "Enrich with firmographic data"
+    type: ai_action
+    description: >
+      For each identified account, call external enrichment APIs
+      (Clearbit, ZoomInfo, or Clay) to pull company size, industry,
+      funding stage, tech stack, and recent news. Batch process:
+      50-200 API calls per run. Results cached for 30 days.
+    depends_on: [identify_accounts]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 500
+    estimated_tokens_out: 300
+    data_sensitivity: medium
+    error_consequence: "Stale or incorrect firmographic data feeds downstream scoring — sales rep approaches prospect with wrong context"
+    reversible: true
+    has_graceful_fallback: true
+    iterations_per_request: 100
+    tools:
+      - "clearbit_api"
+      - "zoominfo_api"
+      - "clay_enrichment"
+
+  - id: enrich_usage
+    name: "Pull product usage data from Snowflake"
+    type: data_lookup
+    description: >
+      Query Snowflake warehouse for each account's product usage metrics:
+      API call volume, index count, query patterns, feature adoption.
+      This is the proprietary signal that makes the scoring defensible.
+    depends_on: [identify_accounts]
+    data_sensitivity: high
+    error_consequence: "Scoring based on stale or incomplete usage data — high-usage accounts missed, low-usage accounts over-prioritized"
+    reversible: true
+    has_graceful_fallback: false
+    iterations_per_request: 1
+
+  - id: score_propensity
+    name: "Score expansion propensity"
+    type: ai_classification
+    description: >
+      Claude scores each account on expansion likelihood (1-100) based on
+      combined firmographic + usage signals. Replaces traditional lead
+      scoring with dynamic, context-aware assessment. Model receives
+      the enriched profile and outputs a score with reasoning.
+    depends_on: [enrich_firmographic, enrich_usage]
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 2000
+    estimated_tokens_out: 500
+    data_sensitivity: medium
+    error_consequence: "Incorrect prioritization — sales reps waste time on low-potential accounts or miss high-potential ones. Directly impacts pipeline efficiency and quota attainment."
+    reversible: true
+    has_graceful_fallback: false
+    iterations_per_request: 100
+
+  - id: generate_deck
+    name: "Generate personalized micro-SaaS sales deck"
+    type: ai_generation
+    description: >
+      For accounts scoring above threshold, Claude generates a customized
+      sales deck: company-specific use cases, relevant case studies,
+      competitive positioning, and a tailored value proposition.
+      Each deck is unique — not a template with mail-merge fields.
+    depends_on: [score_propensity]
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 3000
+    estimated_tokens_out: 2000
+    data_sensitivity: medium
+    error_consequence: "Incorrect claims about prospect's business, wrong competitive positioning, hallucinated case studies. Sales rep presents to prospect and loses credibility."
+    reversible: true
+    customer_facing: true
+    has_graceful_fallback: false
+    iterations_per_request: 20
+
+  - id: generate_pricing
+    name: "Generate pricing proposal from live Salesforce data"
+    type: ai_generation
+    description: >
+      Pull current account's Salesforce usage data and CPQ pricing rules
+      to generate a customized pricing proposal. Includes current spend,
+      projected usage at expansion tier, and ROI calculation.
+    depends_on: [score_propensity]
+    model: "claude-sonnet-4-20250514"
+    estimated_tokens_in: 2500
+    estimated_tokens_out: 1500
+    data_sensitivity: critical
+    error_consequence: "Incorrect pricing shown to prospect — could commit company to unsustainable deal terms or lose deal by overpricing. Financial liability."
+    reversible: false
+    customer_facing: true
+    has_graceful_fallback: false
+    iterations_per_request: 20
+    tools:
+      - "salesforce_cpq_api"
+
+  - id: capacity_check
+    name: "Check sales team capacity before routing"
+    type: data_lookup
+    description: >
+      Query CRM for each rep's current pipeline load, meeting
+      schedule, and active deal count. The AI never overwhelms
+      the team it's supposed to help — if a rep is at capacity,
+      the lead queues rather than dumps.
+    depends_on: [score_propensity]
+    data_sensitivity: low
+    error_consequence: "Rep receives leads beyond capacity, quality of engagement drops, leads go cold"
+    reversible: true
+    has_graceful_fallback: true
+    iterations_per_request: 1
+
+  - id: route_to_rep
+    name: "Route qualified lead to sales rep"
+    type: ai_action
+    description: >
+      Assign the enriched, scored lead with deck and pricing proposal
+      to the best-fit rep based on territory, vertical expertise,
+      and current capacity. Write assignment to Salesforce as new
+      opportunity with all context attached.
+    depends_on: [generate_deck, generate_pricing, capacity_check]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 1000
+    estimated_tokens_out: 200
+    data_sensitivity: high
+    error_consequence: "Wrong rep gets the lead (territory mismatch), or lead assigned with incorrect context. CRM data pollution."
+    reversible: true
+    customer_facing: false
+    has_graceful_fallback: false
+    iterations_per_request: 20
+    tools:
+      - "salesforce_opportunity_create"
+      - "salesforce_task_create"
+
+  - id: write_crm
+    name: "Write enrichment + scoring data back to Salesforce"
+    type: ai_action
+    description: >
+      Update the Salesforce account record with enrichment data,
+      propensity score, scoring reasoning, and generated assets
+      (deck URL, pricing proposal URL). This is the "golden record"
+      update — downstream reporting depends on this being correct.
+    depends_on: [route_to_rep]
+    data_sensitivity: critical
+    error_consequence: "Incorrect data written to Salesforce becomes the 'golden record' — pollutes reporting, forecasting, and future scoring. Hard to detect, hard to clean up."
+    reversible: false
+    customer_facing: false
+    has_graceful_fallback: false
+    iterations_per_request: 20
+    tools:
+      - "salesforce_account_update"
+    cross_workflow_dependency: "Downstream reporting and forecasting pipelines consume this data"
+
+  - id: notify_rep
+    name: "Send Slack notification to assigned rep"
+    type: ai_generation
+    description: >
+      Generate a Slack message summarizing the lead: company name,
+      propensity score, key signals, recommended talking points,
+      and links to the deck and pricing proposal.
+    depends_on: [route_to_rep]
+    model: "claude-haiku-4-5"
+    estimated_tokens_in: 1000
+    estimated_tokens_out: 300
+    error_consequence: "Rep receives garbled or misleading summary — approaches prospect with wrong context"
+    reversible: false
+    customer_facing: true
+    has_graceful_fallback: false
+    iterations_per_request: 20
+
+  - id: log_pipeline_event
+    name: "Log pipeline event to analytics"
+    type: data_lookup
+    description: >
+      Write a structured event to the analytics pipeline tracking:
+      account identified, enrichment completed, score assigned,
+      assets generated, rep assigned, notification sent.
+      Used for funnel analysis and system health monitoring.
+    depends_on: [notify_rep, write_crm]
+    data_sensitivity: low
+    error_consequence: "Missing analytics data — can't measure pipeline effectiveness or detect system degradation"
+    reversible: true
+    has_graceful_fallback: true
+    iterations_per_request: 20
+
+volume:
+  requests_per_day: 1
+  peak_multiplier: 1
+  growth_rate_monthly_pct: 15
+
+risk:
+  regulatory_environment: "standard"
+  customer_facing: true
+  financial_impact_per_error: 5000
+  brand_risk: "high"
+  data_classification: "PII"
+
+infrastructure:
+  snowflake:
+    enabled: true
+    credit_price: 3.00
+    estimated_credits_per_day: 10
+  other_services:
+    - name: "Salesforce API"
+      monthly_cost: 0
+    - name: "Clearbit/ZoomInfo enrichment"
+      monthly_cost: 500
+    - name: "Slack notifications"
+      monthly_cost: 0
