@@ -81,9 +81,21 @@ def _is_hidden_write(step: WorkflowStep) -> bool:
 
 
 def _heuristic_iterations(step: WorkflowStep) -> int:
-    """Return effective iterations per request from explicit field or description heuristic."""
+    """Return effective iterations per request from explicit field or description heuristic.
+
+    When iterations_per_request is explicitly set to 1 in the YAML, the user has declared
+    the actual iteration count — the description-based heuristic is suppressed to avoid
+    false positives where numbers in the description (e.g. output batch sizes) are
+    misread as call multipliers.  Pydantic v2 tracks which fields were supplied via
+    model_fields_set, so we can distinguish "user wrote iterations_per_request: 1" from
+    "field was omitted and defaulted to 1".
+    """
     if step.iterations_per_request > 1:
         return step.iterations_per_request
+    # If the user explicitly declared iterations_per_request: 1, trust it and skip heuristic.
+    if "iterations_per_request" in step.model_fields_set:
+        return 1
+    # Field was not declared — fall back to description-based heuristic.
     desc = step.description.lower()
     has_batch_signal = any(kw in desc for kw in _BATCH_KEYWORDS)
     if not has_batch_signal:
@@ -106,6 +118,12 @@ def score_blast_radius(step: WorkflowStep, risk_profile: RiskProfile) -> float:
         score += 1.0
     # Fix #6: hidden write in a declared data_lookup raises blast
     if _is_hidden_write(step):
+        score += 1.0
+    # Financial impact bonus: high-value errors on sensitive steps amplify blast
+    if risk_profile.financial_impact_per_error >= 5000 and step.data_sensitivity in (
+        DataSensitivity.high,
+        DataSensitivity.critical,
+    ):
         score += 1.0
     return min(score, 5.0)
 
