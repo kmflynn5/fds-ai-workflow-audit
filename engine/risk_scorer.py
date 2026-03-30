@@ -81,9 +81,17 @@ def _is_hidden_write(step: WorkflowStep) -> bool:
 
 
 def _heuristic_iterations(step: WorkflowStep) -> int:
-    """Return effective iterations per request from explicit field or description heuristic."""
+    """Return effective iterations per request from explicit field or description heuristic.
+
+    Fix R2-3: if iterations_per_request was explicitly provided in the YAML (even as 1),
+    trust that value and suppress the batch-keyword heuristic — the author is declaring
+    that this is a single-item call despite any loop-sounding description.
+    """
+    # Explicit value always wins (> 1 or explicitly set to 1)
     if step.iterations_per_request > 1:
         return step.iterations_per_request
+    if "iterations_per_request" in step.model_fields_set:
+        return step.iterations_per_request  # author explicitly said 1; trust it
     desc = step.description.lower()
     has_batch_signal = any(kw in desc for kw in _BATCH_KEYWORDS)
     if not has_batch_signal:
@@ -106,6 +114,12 @@ def score_blast_radius(step: WorkflowStep, risk_profile: RiskProfile) -> float:
         score += 1.0
     # Fix #6: hidden write in a declared data_lookup raises blast
     if _is_hidden_write(step):
+        score += 1.0
+    # Fix R2-1: high financial impact on sensitive data raises blast
+    if (
+        risk_profile.financial_impact_per_error >= 5000
+        and step.data_sensitivity in (DataSensitivity.high, DataSensitivity.critical)
+    ):
         score += 1.0
     return min(score, 5.0)
 

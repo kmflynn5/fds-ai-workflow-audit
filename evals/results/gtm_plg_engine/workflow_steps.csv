@@ -1,0 +1,12 @@
+step_id,name,type,model,depends_on,customer_facing,reversible,data_sensitivity
+identify_accounts,Identify expansion-ready freemium accounts,data_lookup,,,False,True,medium
+enrich_firmographic,Enrich with firmographic data,ai_action,claude-haiku-4-5,identify_accounts,False,True,medium
+enrich_usage,Pull product usage data from Snowflake,data_lookup,,identify_accounts,False,True,high
+score_propensity,Score expansion propensity,ai_classification,claude-sonnet-4-20250514,enrich_firmographic;enrich_usage,False,True,medium
+generate_deck,Generate personalized micro-SaaS sales deck,ai_generation,claude-sonnet-4-20250514,score_propensity,True,True,medium
+generate_pricing,Generate pricing proposal from live Salesforce data,ai_generation,claude-sonnet-4-20250514,score_propensity,True,False,critical
+capacity_check,Check sales team capacity before routing,data_lookup,,score_propensity,False,True,low
+route_to_rep,Route qualified lead to sales rep,ai_action,claude-haiku-4-5,generate_deck;generate_pricing;capacity_check,False,True,high
+write_crm,Write enrichment + scoring data back to Salesforce,ai_action,,route_to_rep,False,False,critical
+notify_rep,Send Slack notification to assigned rep,ai_generation,claude-haiku-4-5,route_to_rep,True,False,low
+log_pipeline_event,Log pipeline event to analytics,data_lookup,,notify_rep;write_crm,False,True,low

@@ -1,0 +1,2 @@
+workflow_name,total_steps,high_risk_steps,checkpoints_required,checkpoints_recommended,failure_modes_high,monthly_cost,annual_cost,cost_per_request
+GTM PLG Engine — Freemium-to-Enterprise Pipeline,11,1,3,4,22,1488.86,17881.13,49.628667

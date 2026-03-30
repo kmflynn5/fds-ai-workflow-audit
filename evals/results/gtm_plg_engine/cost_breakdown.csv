@@ -1,0 +1,7 @@
+step_id,step_name,model,tokens_in_per_request,tokens_out_per_request,cost_per_request,daily_cost,monthly_cost,annual_cost
+enrich_firmographic,Enrich with firmographic data,claude-haiku-4-5,500,300,0.16,0.16,4.8,58.4
+score_propensity,Score expansion propensity,claude-sonnet-4-20250514,2000,500,1.35,1.35,40.5,492.75000000000006
+generate_deck,Generate personalized micro-SaaS sales deck,claude-sonnet-4-20250514,3000,2000,0.78,0.78,23.400000000000002,284.7
+generate_pricing,Generate pricing proposal from live Salesforce data,claude-sonnet-4-20250514,2500,1500,0.6,0.6,18.0,219.0
+route_to_rep,Route qualified lead to sales rep,claude-haiku-4-5,1000,200,0.032,0.032,0.96,11.68
+notify_rep,Send Slack notification to assigned rep,claude-haiku-4-5,1000,300,0.04,0.04,1.2,14.6
