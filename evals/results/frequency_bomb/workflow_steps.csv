@@ -1,0 +1,5 @@
+step_id,name,type,model,depends_on,customer_facing,reversible,data_sensitivity
+trigger,Scheduled batch trigger,input,,,False,True,low
+batch_processor,AI batch record processor,ai_action,claude-haiku-4-5,trigger,False,False,medium
+write_summaries,Write summaries to database,ai_action,,batch_processor,False,False,medium
+report,Generate batch completion report,ai_generation,claude-haiku-4-5,write_summaries,False,True,low

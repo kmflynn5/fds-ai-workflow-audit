@@ -1,0 +1,831 @@
+{
+  "workflow_name": "Tier 2C \u2014 Expense Processor",
+  "workflow_description": "Receipt to reimbursement: AI extracts details, validates against policy, writes to accounting, then executes payment; payment step expected to score > 4.5 (tests scoring ceiling)",
+  "total_steps": 11,
+  "risk_scores": [
+    {
+      "step_id": "receipt_upload",
+      "step_name": "Receive expense receipt",
+      "blast_radius": 2.0,
+      "reversibility": 1.0,
+      "frequency": 5.0,
+      "verifiability": 1.0,
+      "cascading_risk": 5.0,
+      "composite": 2.43,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "extract_details",
+      "step_name": "Extract receipt details",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 5.0,
+      "verifiability": 4.0,
+      "cascading_risk": 5.0,
+      "composite": 3.14,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "validate_policy",
+      "step_name": "Validate against expense policy",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 5.0,
+      "verifiability": 2.0,
+      "cascading_risk": 5.0,
+      "composite": 2.86,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "accounting_write",
+      "step_name": "Write to accounting system",
+      "blast_radius": 5.0,
+      "reversibility": 5.0,
+      "frequency": 5.0,
+      "verifiability": 3.0,
+      "cascading_risk": 5.0,
+      "composite": 4.71,
+      "checkpoint_level": "required"
+    },
+    {
+      "step_id": "payment",
+      "step_name": "Execute reimbursement payment",
+      "blast_radius": 5.0,
+      "reversibility": 5.0,
+      "frequency": 5.0,
+      "verifiability": 3.0,
+      "cascading_risk": 5.0,
+      "composite": 4.71,
+      "checkpoint_level": "required"
+    },
+    {
+      "step_id": "notify_employee",
+      "step_name": "Notify employee of payment",
+      "blast_radius": 4.0,
+      "reversibility": 4.0,
+      "frequency": 5.0,
+      "verifiability": 5.0,
+      "cascading_risk": 4.0,
+      "composite": 4.29,
+      "checkpoint_level": "required"
+    },
+    {
+      "step_id": "notify_manager",
+      "step_name": "Notify manager of approval",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 5.0,
+      "verifiability": 3.0,
+      "cascading_risk": 1.0,
+      "composite": 2.43,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "update_hr_system",
+      "step_name": "Update HR expense record",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 5.0,
+      "verifiability": 3.0,
+      "cascading_risk": 3.0,
+      "composite": 2.71,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "archive_receipt",
+      "step_name": "Archive receipt for audit",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 5.0,
+      "verifiability": 3.0,
+      "cascading_risk": 3.0,
+      "composite": 2.71,
+      "checkpoint_level": "none"
+    },
+    {
+      "step_id": "audit_log",
+      "step_name": "Write audit log entry",
+      "blast_radius": 4.0,
+      "reversibility": 5.0,
+      "frequency": 4.0,
+      "verifiability": 3.0,
+      "cascading_risk": 2.0,
+      "composite": 3.86,
+      "checkpoint_level": "recommended"
+    },
+    {
+      "step_id": "close_expense_report",
+      "step_name": "Close expense report",
+      "blast_radius": 3.0,
+      "reversibility": 1.0,
+      "frequency": 4.0,
+      "verifiability": 3.0,
+      "cascading_risk": 1.0,
+      "composite": 2.29,
+      "checkpoint_level": "none"
+    }
+  ],
+  "failure_mappings": [
+    {
+      "step_id": "accounting_write",
+      "step_name": "Write to accounting system",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 7 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "accounting_write",
+      "step_name": "Write to accounting system",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "accounting_write",
+      "step_name": "Write to accounting system",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "accounting_write",
+      "step_name": "Write to accounting system",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "accounting_write",
+      "step_name": "Write to accounting system",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "medium",
+      "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
+      "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    },
+    {
+      "step_id": "accounting_write",
+      "step_name": "Write to accounting system",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
+      "step_id": "archive_receipt",
+      "step_name": "Archive receipt for audit",
+      "failure_type": "cascading_failure",
+      "risk_level": "medium",
+      "rationale": "Failure propagates to 2 downstream steps",
+      "mitigation": "Add output validation at this step; define a fallback branch for failure cases"
+    },
+    {
+      "step_id": "archive_receipt",
+      "step_name": "Archive receipt for audit",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "archive_receipt",
+      "step_name": "Archive receipt for audit",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "archive_receipt",
+      "step_name": "Archive receipt for audit",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "archive_receipt",
+      "step_name": "Archive receipt for audit",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "medium",
+      "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
+      "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    },
+    {
+      "step_id": "audit_log",
+      "step_name": "Write audit log entry",
+      "failure_type": "cascading_failure",
+      "risk_level": "low",
+      "rationale": "Failure affects 1 downstream step",
+      "mitigation": "Ensure the downstream step handles missing or malformed input gracefully"
+    },
+    {
+      "step_id": "audit_log",
+      "step_name": "Write audit log entry",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "audit_log",
+      "step_name": "Write audit log entry",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "audit_log",
+      "step_name": "Write audit log entry",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "audit_log",
+      "step_name": "Write audit log entry",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "medium",
+      "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
+      "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    },
+    {
+      "step_id": "close_expense_report",
+      "step_name": "Close expense report",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "close_expense_report",
+      "step_name": "Close expense report",
+      "failure_type": "metadata_inconsistency",
+      "risk_level": "medium",
+      "rationale": "Step is marked reversible=true but description contains write/mutation keywords \u2014 reversibility claim may be incorrect",
+      "mitigation": "Verify that a genuine rollback path exists; add automated rollback test; set reversible=false if rollback is not implemented"
+    },
+    {
+      "step_id": "close_expense_report",
+      "step_name": "Close expense report",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "close_expense_report",
+      "step_name": "Close expense report",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "close_expense_report",
+      "step_name": "Close expense report",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "medium",
+      "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
+      "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    },
+    {
+      "step_id": "extract_details",
+      "step_name": "Extract receipt details",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 9 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "extract_details",
+      "step_name": "Extract receipt details",
+      "failure_type": "context_degradation",
+      "risk_level": "high",
+      "rationale": "Long workflow with generation step risks context window saturation",
+      "mitigation": "Implement context summarization between steps; re-inject critical context at each generation step"
+    },
+    {
+      "step_id": "extract_details",
+      "step_name": "Extract receipt details",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Generated content may appear correct but contain factual errors",
+      "mitigation": "Add automated factual-consistency checks; route edge-case outputs to human review queue"
+    },
+    {
+      "step_id": "extract_details",
+      "step_name": "Extract receipt details",
+      "failure_type": "specification_drift",
+      "risk_level": "medium",
+      "rationale": "Step depth or workflow length increases specification drift risk",
+      "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "extract_details",
+      "step_name": "Extract receipt details",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "low",
+      "rationale": "No upstream classified or looked-up data to blindly confirm",
+      "mitigation": "Ensure prompt instructs the model to flag uncertainty rather than assume correctness"
+    },
+    {
+      "step_id": "extract_details",
+      "step_name": "Extract receipt details",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
+      "step_id": "notify_employee",
+      "step_name": "Notify employee of payment",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 4 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "notify_employee",
+      "step_name": "Notify employee of payment",
+      "failure_type": "context_degradation",
+      "risk_level": "high",
+      "rationale": "Long workflow with generation step risks context window saturation",
+      "mitigation": "Implement context summarization between steps; re-inject critical context at each generation step"
+    },
+    {
+      "step_id": "notify_employee",
+      "step_name": "Notify employee of payment",
+      "failure_type": "silent_failure",
+      "risk_level": "high",
+      "rationale": "Customer-facing generated content may be plausible but functionally incorrect",
+      "mitigation": "Implement functional correctness evals (not just semantic); add sampling audit for human review"
+    },
+    {
+      "step_id": "notify_employee",
+      "step_name": "Notify employee of payment",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "notify_employee",
+      "step_name": "Notify employee of payment",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "high",
+      "rationale": "Generation step builds on classified/looked-up data \u2014 may confirm incorrect upstream data",
+      "mitigation": "Cross-reference generated output against raw source data; add validation gate between lookup and generation"
+    },
+    {
+      "step_id": "notify_employee",
+      "step_name": "Notify employee of payment",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    },
+    {
+      "step_id": "notify_manager",
+      "step_name": "Notify manager of approval",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "notify_manager",
+      "step_name": "Notify manager of approval",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "notify_manager",
+      "step_name": "Notify manager of approval",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "notify_manager",
+      "step_name": "Notify manager of approval",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "medium",
+      "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
+      "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    },
+    {
+      "step_id": "payment",
+      "step_name": "Execute reimbursement payment",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 6 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "payment",
+      "step_name": "Execute reimbursement payment",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "payment",
+      "step_name": "Execute reimbursement payment",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "payment",
+      "step_name": "Execute reimbursement payment",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "payment",
+      "step_name": "Execute reimbursement payment",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "medium",
+      "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
+      "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    },
+    {
+      "step_id": "receipt_upload",
+      "step_name": "Receive expense receipt",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 10 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "update_hr_system",
+      "step_name": "Update HR expense record",
+      "failure_type": "cascading_failure",
+      "risk_level": "medium",
+      "rationale": "Failure propagates to 3 downstream steps",
+      "mitigation": "Add output validation at this step; define a fallback branch for failure cases"
+    },
+    {
+      "step_id": "update_hr_system",
+      "step_name": "Update HR expense record",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "update_hr_system",
+      "step_name": "Update HR expense record",
+      "failure_type": "metadata_inconsistency",
+      "risk_level": "medium",
+      "rationale": "Step is marked reversible=true but description contains write/mutation keywords \u2014 reversibility claim may be incorrect",
+      "mitigation": "Verify that a genuine rollback path exists; add automated rollback test; set reversible=false if rollback is not implemented"
+    },
+    {
+      "step_id": "update_hr_system",
+      "step_name": "Update HR expense record",
+      "failure_type": "silent_failure",
+      "risk_level": "medium",
+      "rationale": "Action may complete successfully but with incorrect parameters",
+      "mitigation": "Log all action parameters with expected vs. actual diff; add post-action state validation"
+    },
+    {
+      "step_id": "update_hr_system",
+      "step_name": "Update HR expense record",
+      "failure_type": "specification_drift",
+      "risk_level": "high",
+      "rationale": "Late-stage step in long workflow prone to forgetting original specification",
+      "mitigation": "Periodic spec re-injection; compare outputs against original requirements at this checkpoint"
+    },
+    {
+      "step_id": "update_hr_system",
+      "step_name": "Update HR expense record",
+      "failure_type": "sycophantic_confirmation",
+      "risk_level": "medium",
+      "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
+      "mitigation": "Assert expected data shape before executing action; log action parameters for post-hoc review"
+    },
+    {
+      "step_id": "validate_policy",
+      "step_name": "Validate against expense policy",
+      "failure_type": "cascading_failure",
+      "risk_level": "high",
+      "rationale": "Failure cascades to 8 downstream steps",
+      "mitigation": "Add per-step validation gate; implement circuit breaker pattern"
+    },
+    {
+      "step_id": "validate_policy",
+      "step_name": "Validate against expense policy",
+      "failure_type": "context_degradation",
+      "risk_level": "medium",
+      "rationale": "Multi-step workflow may degrade context quality",
+      "mitigation": "Monitor output quality metrics across session length"
+    },
+    {
+      "step_id": "validate_policy",
+      "step_name": "Validate against expense policy",
+      "failure_type": "specification_drift",
+      "risk_level": "medium",
+      "rationale": "Step depth or workflow length increases specification drift risk",
+      "mitigation": "Re-state task objective in system prompt at this step; add output diff against spec baseline"
+    },
+    {
+      "step_id": "validate_policy",
+      "step_name": "Validate against expense policy",
+      "failure_type": "tool_selection_error",
+      "risk_level": "low",
+      "rationale": "AI step has no tool constraints \u2014 output format entirely model-guided",
+      "mitigation": "Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+    }
+  ],
+  "checkpoints": [
+    {
+      "step_id": "accounting_write",
+      "step_name": "Write to accounting system",
+      "checkpoint_type": "pre-flight review",
+      "priority": "required",
+      "rationale": "High blast radius with irreversible action requires human pre-approval",
+      "implementation_detail": "Human must approve before step executes; add approval queue with SLA target",
+      "estimated_daily_reviews": 50000
+    },
+    {
+      "step_id": "audit_log",
+      "step_name": "Write audit log entry",
+      "checkpoint_type": "pre-flight review",
+      "priority": "required",
+      "rationale": "High blast radius with irreversible action requires human pre-approval",
+      "implementation_detail": "Human must approve before step executes; add approval queue with SLA target",
+      "estimated_daily_reviews": 50000
+    },
+    {
+      "step_id": "notify_employee",
+      "step_name": "Notify employee of payment",
+      "checkpoint_type": "pre-flight review",
+      "priority": "required",
+      "rationale": "High blast radius with irreversible action requires human pre-approval",
+      "implementation_detail": "Human must approve before step executes; add approval queue with SLA target",
+      "estimated_daily_reviews": 50000
+    },
+    {
+      "step_id": "payment",
+      "step_name": "Execute reimbursement payment",
+      "checkpoint_type": "pre-flight review",
+      "priority": "required",
+      "rationale": "High blast radius with irreversible action requires human pre-approval",
+      "implementation_detail": "Human must approve before step executes; add approval queue with SLA target",
+      "estimated_daily_reviews": 50000
+    },
+    {
+      "step_id": "notify_employee",
+      "step_name": "Notify employee of payment",
+      "checkpoint_type": "sampling audit",
+      "priority": "recommended",
+      "rationale": "Customer-facing output with low verifiability needs regular human sampling",
+      "implementation_detail": "Review 5-10% sample of outputs daily; flag anomalies for full review",
+      "estimated_daily_reviews": 3750
+    },
+    {
+      "step_id": "accounting_write",
+      "step_name": "Write to accounting system",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "archive_receipt",
+      "step_name": "Archive receipt for audit",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "audit_log",
+      "step_name": "Write audit log entry",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "extract_details",
+      "step_name": "Extract receipt details",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "notify_employee",
+      "step_name": "Notify employee of payment",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "payment",
+      "step_name": "Execute reimbursement payment",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "update_hr_system",
+      "step_name": "Update HR expense record",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    },
+    {
+      "step_id": "validate_policy",
+      "step_name": "Validate against expense policy",
+      "checkpoint_type": "periodic calibration",
+      "priority": "suggested",
+      "rationale": "Long workflow benefits from periodic specification re-injection",
+      "implementation_detail": "Weekly eval review; monthly spec refresh; compare output drift against baseline",
+      "estimated_daily_reviews": null
+    }
+  ],
+  "cost_report": {
+    "step_costs": [
+      {
+        "step_id": "extract_details",
+        "step_name": "Extract receipt details",
+        "model": "claude-sonnet-4-20250514",
+        "tokens_in_per_request": 2000,
+        "tokens_out_per_request": 400,
+        "cost_per_request": 0.012,
+        "daily_cost": 600.0,
+        "monthly_cost": 18000.0,
+        "annual_cost": 219000.0
+      },
+      {
+        "step_id": "validate_policy",
+        "step_name": "Validate against expense policy",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 1000,
+        "tokens_out_per_request": 200,
+        "cost_per_request": 0.0016,
+        "daily_cost": 80.0,
+        "monthly_cost": 2400.0,
+        "annual_cost": 29200.0
+      },
+      {
+        "step_id": "accounting_write",
+        "step_name": "Write to accounting system",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 800,
+        "tokens_out_per_request": 200,
+        "cost_per_request": 0.00144,
+        "daily_cost": 72.0,
+        "monthly_cost": 2160.0,
+        "annual_cost": 26280.0
+      },
+      {
+        "step_id": "notify_employee",
+        "step_name": "Notify employee of payment",
+        "model": "claude-haiku-4-5",
+        "tokens_in_per_request": 400,
+        "tokens_out_per_request": 200,
+        "cost_per_request": 0.0011200000000000001,
+        "daily_cost": 56.00000000000001,
+        "monthly_cost": 1680.0000000000002,
+        "annual_cost": 20440.000000000004
+      }
+    ],
+    "total_token_daily": 808.0,
+    "total_token_monthly": 24240.0,
+    "total_token_annual": 294920.0,
+    "infra_cost": {
+      "snowflake_daily": 0.0,
+      "snowflake_monthly": 0.0,
+      "other_services_monthly": 280.0,
+      "total_infra_monthly": 280.0
+    },
+    "total_monthly": 24520.0,
+    "total_annual": 298280.0,
+    "cost_per_request": 0.016346666666666666,
+    "growth_projections": [
+      {
+        "month": 0,
+        "daily_volume": 50000,
+        "token_monthly_cost": 24240.0,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 24520.0
+      },
+      {
+        "month": 1,
+        "daily_volume": 51500,
+        "token_monthly_cost": 24967.2,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 25247.2
+      },
+      {
+        "month": 2,
+        "daily_volume": 53045,
+        "token_monthly_cost": 25716.216,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 25996.216
+      },
+      {
+        "month": 3,
+        "daily_volume": 54636,
+        "token_monthly_cost": 26487.70248,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 26767.70248
+      },
+      {
+        "month": 4,
+        "daily_volume": 56275,
+        "token_monthly_cost": 27282.333554400004,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 27562.333554400004
+      },
+      {
+        "month": 5,
+        "daily_volume": 57963,
+        "token_monthly_cost": 28100.803561032,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 28380.803561032
+      },
+      {
+        "month": 6,
+        "daily_volume": 59702,
+        "token_monthly_cost": 28943.827667862963,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 29223.827667862963
+      },
+      {
+        "month": 7,
+        "daily_volume": 61493,
+        "token_monthly_cost": 29812.142497898854,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 30092.142497898854
+      },
+      {
+        "month": 8,
+        "daily_volume": 63338,
+        "token_monthly_cost": 30706.506772835823,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 30986.506772835823
+      },
+      {
+        "month": 9,
+        "daily_volume": 65238,
+        "token_monthly_cost": 31627.701976020897,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 31907.701976020897
+      },
+      {
+        "month": 10,
+        "daily_volume": 67195,
+        "token_monthly_cost": 32576.533035301523,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 32856.53303530152
+      },
+      {
+        "month": 11,
+        "daily_volume": 69211,
+        "token_monthly_cost": 33553.82902636057,
+        "infra_monthly_cost": 280.0,
+        "total_monthly_cost": 33833.82902636057
+      }
+    ],
+    "optimizations": []
+  },
+  "executive_summary": {
+    "workflow_name": "Tier 2C \u2014 Expense Processor",
+    "total_steps": 11,
+    "high_risk_steps": 4,
+    "checkpoints_required": 4,
+    "checkpoints_recommended": 1,
+    "failure_modes_high": 18,
+    "monthly_cost": 24520.0,
+    "annual_cost": 298280.0,
+    "cost_per_request": 0.016347
+  }
+}

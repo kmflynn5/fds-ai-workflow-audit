@@ -1,0 +1,18 @@
+step_id,step_name,failure_type,risk_level,rationale,mitigation
+batch_processor,AI batch record processor,cascading_failure,medium,Failure propagates to 2 downstream steps,Add output validation at this step; define a fallback branch for failure cases
+batch_processor,AI batch record processor,context_degradation,low,Short workflow; context degradation risk is minimal,Standard context monitoring is sufficient
+batch_processor,AI batch record processor,silent_failure,medium,Action may complete successfully but with incorrect parameters,Log all action parameters with expected vs. actual diff; add post-action state validation
+batch_processor,AI batch record processor,specification_drift,low,Step is near the workflow root; specification drift is unlikely,Include original task specification in system prompt as a precaution
+batch_processor,AI batch record processor,sycophantic_confirmation,low,No upstream classified or looked-up data to blindly confirm,Ensure prompt instructs the model to flag uncertainty rather than assume correctness
+batch_processor,AI batch record processor,tool_selection_error,low,AI step has no tool constraints — output format entirely model-guided,"Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+report,Generate batch completion report,context_degradation,low,Short workflow; context degradation risk is minimal,Standard context monitoring is sufficient
+report,Generate batch completion report,silent_failure,medium,Generated content may appear correct but contain factual errors,Add automated factual-consistency checks; route edge-case outputs to human review queue
+report,Generate batch completion report,specification_drift,medium,Step depth or workflow length increases specification drift risk,Re-state task objective in system prompt at this step; add output diff against spec baseline
+report,Generate batch completion report,sycophantic_confirmation,low,No upstream classified or looked-up data to blindly confirm,Ensure prompt instructs the model to flag uncertainty rather than assume correctness
+report,Generate batch completion report,tool_selection_error,low,AI step has no tool constraints — output format entirely model-guided,"Define explicit output schema (Pydantic, JSON Schema) and validate against it"
+trigger,Scheduled batch trigger,cascading_failure,medium,Failure propagates to 3 downstream steps,Add output validation at this step; define a fallback branch for failure cases
+write_summaries,Write summaries to database,cascading_failure,low,Failure affects 1 downstream step,Ensure the downstream step handles missing or malformed input gracefully
+write_summaries,Write summaries to database,context_degradation,low,Short workflow; context degradation risk is minimal,Standard context monitoring is sufficient
+write_summaries,Write summaries to database,silent_failure,medium,Action may complete successfully but with incorrect parameters,Log all action parameters with expected vs. actual diff; add post-action state validation
+write_summaries,Write summaries to database,specification_drift,medium,Step depth or workflow length increases specification drift risk,Re-state task objective in system prompt at this step; add output diff against spec baseline
+write_summaries,Write summaries to database,sycophantic_confirmation,low,No upstream classified or looked-up data to blindly confirm,Ensure prompt instructs the model to flag uncertainty rather than assume correctness
