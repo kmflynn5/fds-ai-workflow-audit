@@ -185,7 +185,7 @@ steps:
     iterations_per_request: 20
     tools:
       - "salesforce_account_update"
-    cross_workflow_dependency: "Downstream reporting and forecasting pipelines consume this data"
+    cross_workflow_dependency: true
 
   - id: notify_rep
     name: "Send Slack notification to assigned rep"

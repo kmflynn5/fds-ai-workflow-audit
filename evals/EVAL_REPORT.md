@@ -1,7 +1,7 @@
 # FDS AI Workflow Audit — Eval Report
 
-**Date:** 2026-03-29
-**Tool version:** `claude/great-edison`
+**Date:** 2026-03-30
+**Tool version:** `claude/distracted-faraday` (4 GTM PLG fixes on top of `claude/great-edison`)
 **Eval runner:** `evals/eval_runner.py`
 
 ---
@@ -17,7 +17,7 @@
 | Score threshold accuracy | 80%+ | 4/4 (100%) | PASS |
 | Score ceiling: 4.5 reachable for financial steps | yes | payment=4.71, resolve=4.71 | PASS |
 
-**Overall:** All 7 tuning fixes applied. Tool now correctly detects every known failure type across all tiers with zero confirmed false positives on the test set.
+**Overall:** All 7 tuning fixes from PR #1 plus 4 GTM PLG-specific fixes applied. Tool correctly detects every known failure type across all tiers with zero confirmed false positives on the test set. GTM PLG Engine workflow now has correct checkpoint coverage on all high-risk steps.
 
 ---
 
@@ -171,6 +171,39 @@ New `cross_workflow_dependency: bool = False` field on `WorkflowStep`. Terminal 
 
 ### Fix #7 — Frequency bomb detection
 New `iterations_per_request: int = 1` field on `WorkflowStep`. `score_frequency` multiplies effective volume by this field. When the field is not set, a heuristic extracts the batch count from description keywords ("loops over N records"). Batch processor in `frequency_bomb.yml` now correctly scores frequency=4.0.
+
+---
+
+## GTM PLG Engine Fixes (PR #2 — `claude/distracted-faraday`)
+
+Four additional fixes targeting GTM PLG-specific gaps identified during the first GTM PLG workflow run.
+
+### GTM Fix 1 — Financial impact blast bonus
+`score_blast_radius` adds +1.0 when `risk_profile.financial_impact_per_error >= 5000` AND
+`step.data_sensitivity in (high, critical)`. Effect on `generate_pricing`: blast 4.0 → 5.0,
+composite 3.86 → **4.14** → checkpoint_level "recommended" → **"required"** by score, not rule.
+
+Also raises blast on `enrich_usage` (3.0→4.0), `route_to_rep` (3.0→4.0), and `write_crm`
+(3.0→4.0), which in combination with GTM Fix 2 gives `write_crm` its required checkpoints.
+
+### GTM Fix 2 — Cross-workflow checkpoint for non-terminal steps
+New rule in `checkpoint_recommender`: when `cross_workflow_dependency=true AND reversible=false
+AND data_sensitivity in (high, critical)`, emit a required post-action verification checkpoint
+regardless of descendant count. Closes the gap where `write_crm` (1 in-workflow descendant) was
+excluded from the existing terminal-step cross-workflow rule. YAML `cross_workflow_dependency`
+field corrected from string to bool.
+
+### GTM Fix 3 — Frequency heuristic suppressed when `iterations_per_request` explicitly set
+`_heuristic_iterations` now checks Pydantic v2's `model_fields_set`. If `iterations_per_request`
+was explicitly declared in the YAML, the description-based heuristic is skipped regardless of
+value. Fixes `identify_accounts` false positive: "Returns batch of 50-200 accounts" → freq 3.0
+→ **1.0**. Frequency bomb eval unaffected: `batch_processor` does not declare the field, so the
+heuristic still fires → freq=4.0 ✓.
+
+### GTM Fix 4 — Cost calculator respects `iterations_per_request`
+`calculate_step_cost` multiplies `estimated_tokens_in` and `estimated_tokens_out` by
+`step.iterations_per_request` before computing cost. True Claude API monthly cost for the GTM PLG
+workflow: $2.63 → **$88.86** (~34× increase, accurate).
 
 ---
 
