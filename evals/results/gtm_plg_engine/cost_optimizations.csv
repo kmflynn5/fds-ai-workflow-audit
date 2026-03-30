@@ -1,0 +1,2 @@
+step_id,step_name,suggestion,estimated_monthly_savings,category
+score_propensity,Score expansion propensity,Downgrade model from 'claude-sonnet-4-20250514' to 'claude-haiku-4-5' for classification task.,40.392,model_downgrade

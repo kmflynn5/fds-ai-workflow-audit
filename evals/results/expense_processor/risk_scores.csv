@@ -8,5 +8,5 @@ notify_employee,Notify employee of payment,4.0,4.0,5.0,5.0,4.0,4.29,required
 notify_manager,Notify manager of approval,3.0,1.0,5.0,3.0,1.0,2.43,none
 update_hr_system,Update HR expense record,3.0,1.0,5.0,3.0,3.0,2.71,none
 archive_receipt,Archive receipt for audit,3.0,1.0,5.0,3.0,3.0,2.71,none
-audit_log,Write audit log entry,4.0,5.0,4.0,3.0,2.0,3.86,recommended
+audit_log,Write audit log entry,5.0,5.0,4.0,3.0,2.0,4.14,required
 close_expense_report,Close expense report,3.0,1.0,4.0,3.0,1.0,2.29,none

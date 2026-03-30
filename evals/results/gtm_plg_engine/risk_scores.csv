@@ -1,0 +1,12 @@
+step_id,step_name,blast_radius,reversibility,frequency,verifiability,cascading_risk,composite,checkpoint_level
+identify_accounts,Identify expansion-ready freemium accounts,2.0,1.0,1.0,1.0,5.0,1.86,none
+enrich_firmographic,Enrich with firmographic data,2.0,2.0,2.0,3.0,5.0,2.57,none
+enrich_usage,Pull product usage data from Snowflake,4.0,1.0,1.0,1.0,5.0,2.43,none
+score_propensity,Score expansion propensity,2.0,1.0,2.0,2.0,5.0,2.14,none
+generate_deck,Generate personalized micro-SaaS sales deck,3.0,1.0,2.0,5.0,4.0,2.71,none
+generate_pricing,Generate pricing proposal from live Salesforce data,5.0,4.0,2.0,5.0,4.0,4.14,required
+capacity_check,Check sales team capacity before routing,2.0,1.0,1.0,1.0,4.0,1.71,none
+route_to_rep,Route qualified lead to sales rep,4.0,2.0,1.0,3.0,3.0,2.71,none
+write_crm,Write enrichment + scoring data back to Salesforce,4.0,5.0,1.0,3.0,2.0,3.43,none
+notify_rep,Send Slack notification to assigned rep,3.0,4.0,1.0,5.0,2.0,3.14,none
+log_pipeline_event,Log pipeline event to analytics,3.0,5.0,1.0,3.0,1.0,3.0,none

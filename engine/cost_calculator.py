@@ -114,8 +114,9 @@ def calculate_step_cost(
 
     input_price, output_price = resolve_model_price(step.model, pricing, overrides)
 
-    input_cost = (step.estimated_tokens_in / 1_000_000) * input_price
-    output_cost = (step.estimated_tokens_out / 1_000_000) * output_price
+    iterations = step.iterations_per_request
+    input_cost = (step.estimated_tokens_in * iterations / 1_000_000) * input_price
+    output_cost = (step.estimated_tokens_out * iterations / 1_000_000) * output_price
     cost_per_request = input_cost + output_cost
 
     daily = cost_per_request * daily_volume

@@ -6,7 +6,7 @@ from enum import StrEnum
 import networkx as nx
 
 from engine.failure_mapper import FailureMapping
-from engine.parser import WorkflowConfig
+from engine.parser import DataSensitivity, WorkflowConfig
 from engine.risk_scorer import RiskScores
 
 
@@ -127,6 +127,30 @@ def recommend_checkpoints(
                         "Weekly eval review; monthly spec refresh; compare output drift against baseline"
                     ),
                     estimated_daily_reviews=None,
+                )
+            )
+
+        # Rule 6a: Cross-workflow dependency with irreversible sensitive data
+        if (
+            step.cross_workflow_dependency
+            and not step.reversible
+            and step.data_sensitivity in (DataSensitivity.high, DataSensitivity.critical)
+        ):
+            step_recs.append(
+                CheckpointRecommendation(
+                    step_id=step.id,
+                    step_name=step.name,
+                    checkpoint_type=CheckpointType.post_action_verification,
+                    priority="required",
+                    rationale=(
+                        "Cross-workflow dependency with irreversible, sensitive data — "
+                        "downstream pipelines depend on this output being correct"
+                    ),
+                    implementation_detail=(
+                        "Verify output before downstream pipelines consume it; "
+                        "add data quality gate with alerting on schema or value anomalies"
+                    ),
+                    estimated_daily_reviews=volume.requests_per_day,
                 )
             )
 

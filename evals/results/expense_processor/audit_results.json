@@ -105,13 +105,13 @@
     {
       "step_id": "audit_log",
       "step_name": "Write audit log entry",
-      "blast_radius": 4.0,
+      "blast_radius": 5.0,
       "reversibility": 5.0,
       "frequency": 4.0,
       "verifiability": 3.0,
       "cascading_risk": 2.0,
-      "composite": 3.86,
-      "checkpoint_level": "recommended"
+      "composite": 4.14,
+      "checkpoint_level": "required"
     },
     {
       "step_id": "close_expense_report",
