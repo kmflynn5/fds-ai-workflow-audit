@@ -1,12 +1,12 @@
 step_id,step_name,blast_radius,reversibility,frequency,verifiability,cascading_risk,composite,checkpoint_level
-collect_open_brain,Query fds-recall (Open Brain),2.0,1.0,1.0,1.0,4.0,1.71,none
+collect_open_brain,Query knowledge base,2.0,1.0,1.0,1.0,4.0,1.71,none
 collect_github,Query GitHub API,2.0,1.0,1.0,1.0,4.0,1.71,none
 collect_mercury,Query Mercury Banking API,3.0,1.0,1.0,1.0,4.0,2.0,none
 collect_zoho_mail,Query Zoho Mail API,3.0,1.0,1.0,1.0,4.0,2.0,none
 collect_zoho_calendar,Query Zoho Calendar API,2.0,1.0,1.0,1.0,4.0,1.71,none
 collect_pipeline,Query Pipeline CRM (Supabase),2.0,1.0,1.0,1.0,4.0,1.71,none
-write_daily_brief,Write raw payload to Open Brain as daily_brief,2.0,1.0,1.0,3.0,4.0,2.0,none
+write_daily_brief,Write raw payload to knowledge base as daily_brief,2.0,1.0,1.0,3.0,4.0,2.0,none
 format_brief,Claude API formats decision-ready brief,2.0,2.0,1.0,4.0,3.0,2.29,none
 send_email,Send morning brief via Resend,3.0,5.0,1.0,3.0,3.0,3.29,none
 parse_reply,Reply handler parses decisions,2.0,1.0,1.0,2.0,2.0,1.57,none
-write_decisions,Write decisions back to fds-recall,2.0,1.0,1.0,3.0,1.0,1.57,none
+write_decisions,Write decisions back to knowledge base,2.0,1.0,1.0,3.0,1.0,1.57,none

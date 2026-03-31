@@ -6,9 +6,9 @@ workflow:
 
 steps:
   - id: collect_open_brain
-    name: "Query fds-recall (Open Brain)"
+    name: "Query knowledge base"
     type: data_lookup
-    description: "list_recent (24h, all types) + semantic_search for unresolved items via Supabase Edge Function MCP endpoint"
+    description: "list_recent (24h, all types) + semantic_search for unresolved items via memory system API"
     data_sensitivity: medium
     error_consequence: "Brief missing recent decisions, action items, and context"
     reversible: true
@@ -25,7 +25,7 @@ steps:
   - id: collect_mercury
     name: "Query Mercury Banking API"
     type: data_lookup
-    description: "Account balances for 5 Profit First accounts, recent transactions"
+    description: "Account balances for business bank accounts, recent transactions"
     data_sensitivity: critical
     error_consequence: "Brief missing financial data, potential missed allocation deadlines"
     reversible: true
@@ -57,9 +57,9 @@ steps:
     has_graceful_fallback: true
 
   - id: write_daily_brief
-    name: "Write raw payload to Open Brain as daily_brief"
+    name: "Write raw payload to knowledge base as daily_brief"
     type: ai_action
-    description: "Capture the complete collected payload as a daily_brief thought in fds-recall"
+    description: "Capture the complete collected payload as a daily_brief thought in knowledge base"
     depends_on: [collect_open_brain, collect_github, collect_mercury, collect_zoho_mail, collect_zoho_calendar, collect_pipeline]
     data_sensitivity: medium
     error_consequence: "No historical record of what was collected — breaks audit trail"
@@ -100,9 +100,9 @@ steps:
     reversible: true
 
   - id: write_decisions
-    name: "Write decisions back to fds-recall"
+    name: "Write decisions back to knowledge base"
     type: ai_action
-    description: "Each parsed decision captured as project_decision in Open Brain"
+    description: "Each parsed decision captured as project_decision in knowledge base"
     depends_on: [parse_reply]
     error_consequence: "Decisions not logged — agents and future briefs lose context"
     reversible: true

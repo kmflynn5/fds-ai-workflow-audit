@@ -532,10 +532,10 @@ Marketing team using AI to draft blog posts, social media, email campaigns. Lowe
 Sales team enriching CRM records with AI-generated firmographic data. Connects to the Salesforce/HubSpot world.
 
 ### `examples/sales_outreach_agent.yml`
-AI drafting personalized sales emails based on prospect research. Connects to the GTM engine work . Tool selection risk is high (which CRM field to update, which email to send).
+AI drafting personalized sales emails based on prospect research. Connects to the GTM engine work. Tool selection risk is high (which CRM field to update, which email to send).
 
 ### `examples/internal_knowledge_qa.yml`
-RAG-based internal Q&A system. Context architecture risk is dominant. Silent failure (plausible but wrong answer) is the primary concern. Directly relevant to fds-recall / Sales Brain.
+RAG-based internal Q&A system. Context architecture risk is dominant. Silent failure (plausible but wrong answer) is the primary concern. Directly relevant to internal knowledge base systems.
 
 ---
 
@@ -568,15 +568,6 @@ RAG-based internal Q&A system. Context architecture risk is dominant. Silent fai
 3. Polish examples
 4. Security audit
 5. Make repo public
-
----
-
-## [REDACTED — client strategy removed before open-sourcing]
-
-[Section removed]
-
-
-
 
 
 

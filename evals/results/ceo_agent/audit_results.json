@@ -5,7 +5,7 @@
   "risk_scores": [
     {
       "step_id": "collect_open_brain",
-      "step_name": "Query fds-recall (Open Brain)",
+      "step_name": "Query knowledge base",
       "blast_radius": 2.0,
       "reversibility": 1.0,
       "frequency": 1.0,
@@ -71,7 +71,7 @@
     },
     {
       "step_id": "write_daily_brief",
-      "step_name": "Write raw payload to Open Brain as daily_brief",
+      "step_name": "Write raw payload to knowledge base as daily_brief",
       "blast_radius": 2.0,
       "reversibility": 1.0,
       "frequency": 1.0,
@@ -115,7 +115,7 @@
     },
     {
       "step_id": "write_decisions",
-      "step_name": "Write decisions back to fds-recall",
+      "step_name": "Write decisions back to knowledge base",
       "blast_radius": 2.0,
       "reversibility": 1.0,
       "frequency": 1.0,
@@ -152,7 +152,7 @@
     },
     {
       "step_id": "collect_open_brain",
-      "step_name": "Query fds-recall (Open Brain)",
+      "step_name": "Query knowledge base",
       "failure_type": "cascading_failure",
       "risk_level": "high",
       "rationale": "Failure cascades to 5 downstream steps",
@@ -312,7 +312,7 @@
     },
     {
       "step_id": "write_daily_brief",
-      "step_name": "Write raw payload to Open Brain as daily_brief",
+      "step_name": "Write raw payload to knowledge base as daily_brief",
       "failure_type": "cascading_failure",
       "risk_level": "high",
       "rationale": "Failure cascades to 4 downstream steps",
@@ -320,7 +320,7 @@
     },
     {
       "step_id": "write_daily_brief",
-      "step_name": "Write raw payload to Open Brain as daily_brief",
+      "step_name": "Write raw payload to knowledge base as daily_brief",
       "failure_type": "context_degradation",
       "risk_level": "medium",
       "rationale": "Multi-step workflow may degrade context quality",
@@ -328,7 +328,7 @@
     },
     {
       "step_id": "write_daily_brief",
-      "step_name": "Write raw payload to Open Brain as daily_brief",
+      "step_name": "Write raw payload to knowledge base as daily_brief",
       "failure_type": "silent_failure",
       "risk_level": "medium",
       "rationale": "Action may complete successfully but with incorrect parameters",
@@ -336,7 +336,7 @@
     },
     {
       "step_id": "write_daily_brief",
-      "step_name": "Write raw payload to Open Brain as daily_brief",
+      "step_name": "Write raw payload to knowledge base as daily_brief",
       "failure_type": "specification_drift",
       "risk_level": "medium",
       "rationale": "Step depth or workflow length increases specification drift risk",
@@ -344,7 +344,7 @@
     },
     {
       "step_id": "write_daily_brief",
-      "step_name": "Write raw payload to Open Brain as daily_brief",
+      "step_name": "Write raw payload to knowledge base as daily_brief",
       "failure_type": "sycophantic_confirmation",
       "risk_level": "medium",
       "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
@@ -352,7 +352,7 @@
     },
     {
       "step_id": "write_decisions",
-      "step_name": "Write decisions back to fds-recall",
+      "step_name": "Write decisions back to knowledge base",
       "failure_type": "cascading_failure",
       "risk_level": "medium",
       "rationale": "Terminal step with cross-workflow dependency \u2014 failure corrupts future workflow runs",
@@ -360,7 +360,7 @@
     },
     {
       "step_id": "write_decisions",
-      "step_name": "Write decisions back to fds-recall",
+      "step_name": "Write decisions back to knowledge base",
       "failure_type": "context_degradation",
       "risk_level": "medium",
       "rationale": "Multi-step workflow may degrade context quality",
@@ -368,7 +368,7 @@
     },
     {
       "step_id": "write_decisions",
-      "step_name": "Write decisions back to fds-recall",
+      "step_name": "Write decisions back to knowledge base",
       "failure_type": "silent_failure",
       "risk_level": "medium",
       "rationale": "Action may complete successfully but with incorrect parameters",
@@ -376,7 +376,7 @@
     },
     {
       "step_id": "write_decisions",
-      "step_name": "Write decisions back to fds-recall",
+      "step_name": "Write decisions back to knowledge base",
       "failure_type": "specification_drift",
       "risk_level": "high",
       "rationale": "Late-stage step in long workflow prone to forgetting original specification",
@@ -384,7 +384,7 @@
     },
     {
       "step_id": "write_decisions",
-      "step_name": "Write decisions back to fds-recall",
+      "step_name": "Write decisions back to knowledge base",
       "failure_type": "sycophantic_confirmation",
       "risk_level": "medium",
       "rationale": "Action step builds on classified/looked-up data \u2014 may propagate upstream errors without challenge",
