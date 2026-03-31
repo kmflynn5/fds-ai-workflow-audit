@@ -14,7 +14,7 @@ from engine.parser import (
     parse_workflow,
 )
 
-EXAMPLE_YAML = Path(__file__).parent.parent / "workflows" / "workflow.example.yml"
+EXAMPLE_YAML = Path(__file__).parent.parent / "examples" / "workflow.example.yml"
 
 
 def test_parse_example_workflow() -> None:

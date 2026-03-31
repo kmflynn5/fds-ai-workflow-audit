@@ -297,7 +297,7 @@ ANSWER_KEYS: dict[str, dict] = {
     # Tier 3D — GTM PLG Engine (Round 2 eval)
     # ------------------------------------------------------------------
     "gtm_plg_engine": {
-        "workflow_path": "workflows/gtm_plg_engine.yml",
+        "workflow_path": "evals/workflows/gtm_plg_engine.yml",
         "output_dir": "evals/results/gtm_plg_engine",
         "tier": 3,
         "true_positives": [
@@ -432,7 +432,10 @@ def _check_failure_flag(results: dict, step_id: str, failure_type: str, min_risk
     return False, f"{failure_type} flagged {best['risk_level'].upper()} for {step_id} (need >= {min_risk})"
 
 
-def _check_score_threshold(results: dict, step_id: str, dimension: str, min_value: float | None, max_value: float | None) -> tuple[bool, str]:
+def _check_score_threshold(
+    results: dict, step_id: str, dimension: str,
+    min_value: float | None, max_value: float | None,
+) -> tuple[bool, str]:
     if step_id == "_all_":
         scores = results["risk_scores"]
         violations = [s for s in scores if max_value is not None and s[dimension] > max_value]
@@ -467,7 +470,10 @@ def _check_checkpoint(results: dict, step_id: str) -> tuple[bool, str]:
 def _check_no_high_flag(results: dict, step_id: str, failure_type: str) -> tuple[bool, str]:
     """Returns True (PASSES) if the step does NOT have a high flag — meaning no false positive."""
     fms = results["failure_mappings"]
-    high_matches = [fm for fm in fms if fm["step_id"] == step_id and fm["failure_type"] == failure_type and fm["risk_level"] == "high"]
+    high_matches = [
+        fm for fm in fms
+        if fm["step_id"] == step_id and fm["failure_type"] == failure_type and fm["risk_level"] == "high"
+    ]
     if high_matches:
         return False, f"FALSE POSITIVE: {step_id} incorrectly flagged {failure_type} HIGH"
     return True, f"Correctly NOT flagged {failure_type} HIGH for {step_id}"
@@ -580,7 +586,10 @@ def print_summary_table(eval_results: list[WorkflowEvalResult]) -> None:
         ("True positive rate (Tier 1)", "100%", pct(t1p, t1t)),
         ("True positive rate (Tier 2)", "90%+", pct(t2p, t2t)),
         ("True positive rate (Tier 3)", "90%+", pct(t3p, t3t)),
-        ("False positive rate (correctly NOT flagged)", ">90%", pct(all_fp_pass, all_fp_total) if all_fp_total else "N/A"),
+        (
+            "False positive rate (correctly NOT flagged)", ">90%",
+            pct(all_fp_pass, all_fp_total) if all_fp_total else "N/A",
+        ),
         ("Score threshold accuracy", "80%+", pct(all_score_pass, all_score_total) if all_score_total else "N/A"),
     ]
 

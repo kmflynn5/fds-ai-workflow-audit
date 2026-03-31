@@ -67,11 +67,11 @@ Optional: Claude API integration for automated workflow analysis. If configured,
 fds-ai-workflow-audit/
 ├── LICENSE                      # Apache 2.0
 ├── README.md
-├── workflow.example.yml         # Example workflow config
 ├── run_audit.py                 # Main entrypoint
 ├── requirements.txt
 │
-├── examples/                    # Pre-built example workflows
+├── examples/                    # Workflow configs to audit
+│   ├── workflow.example.yml     # Reference example workflow
 │   ├── customer_support_agent.yml
 │   ├── content_generation_pipeline.yml
 │   ├── data_enrichment_system.yml

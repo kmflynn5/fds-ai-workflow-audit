@@ -231,7 +231,7 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="AI workflow risk and quality assessment tool")
     parser.add_argument(
-        "workflow", nargs="?", default="workflows/workflow.example.yml", help="Path to workflow YAML file"
+        "workflow", nargs="?", default="examples/workflow.example.yml", help="Path to workflow YAML file"
     )
     parser.add_argument("-o", "--output", default="output", help="Output directory (default: output)")
     parser.add_argument("--no-evidence", action="store_true", help="Skip syncing CSVs to Evidence sources directory")

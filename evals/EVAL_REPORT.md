@@ -151,7 +151,7 @@ Fix #2: denominator change pushed step_10 from 3.25 → 3.71, crossing the 3.5 `
 
 ## Tier 3D — GTM PLG Engine (Round 2)
 
-**Workflow:** `workflows/gtm_plg_engine.yml`
+**Workflow:** `evals/workflows/gtm_plg_engine.yml`
 
 ### True Positive Hits
 
@@ -227,7 +227,7 @@ New `iterations_per_request: int = 1` field on `WorkflowStep`. `score_frequency`
 ### Fix R2-2 — Cross-workflow golden record checkpoint
 `recommend_checkpoints` in `checkpoint_recommender.py` adds a new Rule R2-2: non-terminal steps with `cross_workflow_dependency=True`, `reversible=False`, and `data_sensitivity in (high, critical)` receive a **required post-action verification** checkpoint. Catches `write_crm` — the Salesforce golden record write that silently pollutes downstream forecasting and reporting pipelines.
 
-Also fixed: `cross_workflow_dependency` value in `workflows/gtm_plg_engine.yml` corrected from a descriptive string to the `true` boolean expected by the parser schema.
+Also fixed: `cross_workflow_dependency` value in `evals/workflows/gtm_plg_engine.yml` corrected from a descriptive string to the `true` boolean expected by the parser schema.
 
 ### Fix R2-3 — Suppress batch heuristic when iterations_per_request explicitly set
 `_heuristic_iterations` in `risk_scorer.py` now checks `"iterations_per_request" in step.model_fields_set`. If the author explicitly declared `iterations_per_request: 1` in the YAML, the batch-keyword heuristic is skipped — trusting the author's intent. Eliminates the false positive on `identify_accounts` (which has batch-sounding language but processes one account at a time).

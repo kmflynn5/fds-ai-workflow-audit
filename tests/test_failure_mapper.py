@@ -11,7 +11,7 @@ from engine.failure_mapper import (
 from engine.parser import build_step_graph, parse_workflow
 
 PROJECT_ROOT = Path(__file__).parent.parent
-EXAMPLE_YAML = PROJECT_ROOT / "workflows" / "workflow.example.yml"
+EXAMPLE_YAML = PROJECT_ROOT / "examples" / "workflow.example.yml"
 
 
 def _load():

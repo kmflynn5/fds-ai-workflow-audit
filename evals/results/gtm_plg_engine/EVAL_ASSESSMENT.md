@@ -43,7 +43,7 @@ Scored with the PR #1 engine (7 fixes applied). Key gaps identified:
 
 **Fix:** New Rule R2-2 in `recommend_checkpoints`: non-terminal steps with `cross_workflow_dependency=True + reversible=False + data_sensitivity in (high, critical)` receive a **required post-action verification** checkpoint.
 
-Also fixed: `cross_workflow_dependency` field in `workflows/gtm_plg_engine.yml` was set to a descriptive string — corrected to `true` (bool) to match the `WorkflowStep` schema.
+Also fixed: `cross_workflow_dependency` field in `evals/workflows/gtm_plg_engine.yml` was set to a descriptive string — corrected to `true` (bool) to match the `WorkflowStep` schema.
 
 **Result:** `write_crm` now produces two required checkpoints: pre-flight review (from Rule 1: blast_radius ≥ 4 + irreversible) and **post-action verification** (from Rule R2-2: cross-workflow golden record).
 
@@ -138,4 +138,4 @@ Future improvement candidates (not blocking):
 - `generate_deck` composite (2.71) is below the recommended-checkpoint threshold despite being customer-facing with sycophantic confirmation and context degradation risks — investigate whether brand risk field should feed into blast radius
 - `write_crm` composite (3.43) is below recommended despite being the golden record write — the cross-workflow checkpoint rule (R2-2) compensates operationally, but the composite score itself doesn't reflect the full downstream risk
 
-*Generated: 2026-03-30 — rerun audit with `uv run python run_audit.py workflows/gtm_plg_engine.yml -o evals/results/gtm_plg_engine --no-evidence`*
+*Generated: 2026-03-30 — rerun audit with `uv run python run_audit.py evals/workflows/gtm_plg_engine.yml -o evals/results/gtm_plg_engine --no-evidence`*

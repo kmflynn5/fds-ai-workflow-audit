@@ -17,7 +17,7 @@ from engine.risk_scorer import (
 _PLAIN_STEP = WorkflowStep(id="root", name="root", type=StepType.input, description="plain step")
 
 PROJECT_ROOT = Path(__file__).parent.parent
-EXAMPLE_YAML = PROJECT_ROOT / "workflows" / "workflow.example.yml"
+EXAMPLE_YAML = PROJECT_ROOT / "examples" / "workflow.example.yml"
 
 
 def test_score_workflow_example() -> None:

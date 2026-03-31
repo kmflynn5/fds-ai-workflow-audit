@@ -10,7 +10,7 @@ from engine.parser import build_step_graph, parse_workflow
 from engine.risk_scorer import score_workflow
 
 PROJECT_ROOT = Path(__file__).parent.parent
-EXAMPLE_YAML = PROJECT_ROOT / "workflows" / "workflow.example.yml"
+EXAMPLE_YAML = PROJECT_ROOT / "examples" / "workflow.example.yml"
 
 
 @pytest.fixture(scope="module")

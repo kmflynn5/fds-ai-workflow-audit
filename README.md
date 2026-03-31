@@ -19,7 +19,7 @@ Takes a YAML description of an AI-powered workflow and produces:
 uv sync
 
 # Run the audit on an example workflow
-uv run python run_audit.py workflows/workflow.example.yml
+uv run python run_audit.py examples/workflow.example.yml
 
 # View the Evidence report (CSVs are auto-synced to evidence/sources/)
 cd evidence && npm install && npm run sources && npm run dev
@@ -27,10 +27,9 @@ cd evidence && npm install && npm run sources && npm run dev
 
 ## Workflows
 
-`workflows/` contains workflow configs to audit. `examples/` has additional reference patterns.
+`examples/` contains workflow configs to audit.
 
-- `workflows/workflow.example.yml` — Tier 1 customer support agent (reference workflow)
-- `workflows/ceo_agent.yml` — CEO agent workflow
+- `examples/workflow.example.yml` — Tier 1 customer support agent (reference workflow)
 - `examples/customer_support_agent.yml` — Support with sentiment-based escalation
 - `examples/content_generation_pipeline.yml` — Marketing content with brand voice checks
 - `examples/data_enrichment_system.yml` — CRM enrichment with validation gates
