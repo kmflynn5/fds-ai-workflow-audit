@@ -158,7 +158,33 @@ def recommend_checkpoints(
                 )
             )
 
-        # Rule 6: General checkpoint from composite score
+        # Rule 6: Cross-workflow dependency checkpoint
+        # A step that feeds other workflows AND is irreversible AND touches sensitive data
+        # must have a required checkpoint regardless of descendant count in this workflow.
+        if (
+            step.cross_workflow_dependency
+            and not step.reversible
+            and step.data_sensitivity in (DataSensitivity.high, DataSensitivity.critical)
+        ):
+            step_recs.append(
+                CheckpointRecommendation(
+                    step_id=step.id,
+                    step_name=step.name,
+                    checkpoint_type=CheckpointType.post_action_verification,
+                    priority="required",
+                    rationale=(
+                        "Cross-workflow dependency with irreversible write to sensitive data — "
+                        "downstream pipelines consume this record as a source of truth"
+                    ),
+                    implementation_detail=(
+                        "Verify record correctness before downstream pipelines consume it; "
+                        "add data-quality assertion gate and alerting on schema drift"
+                    ),
+                    estimated_daily_reviews=int(volume.requests_per_day * 0.1),
+                )
+            )
+
+        # Rule 7: General checkpoint from composite score
         if rs.checkpoint_level == "required" and not got_preflight:
             step_recs.append(
                 CheckpointRecommendation(
