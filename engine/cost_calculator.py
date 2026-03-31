@@ -114,8 +114,8 @@ def calculate_step_cost(
 
     input_price, output_price = resolve_model_price(step.model, pricing, overrides)
 
-    # Multiply token counts by iterations_per_request so per-request cost reflects
-    # the true number of Claude API calls made per workflow invocation.
+    # Fix R2-4: multiply token estimates by iterations_per_request so batch steps
+    # reflect their true per-request token spend (e.g. 500 iterations × 1k tokens = 500k tokens).
     effective_tokens_in = step.estimated_tokens_in * step.iterations_per_request
     effective_tokens_out = step.estimated_tokens_out * step.iterations_per_request
 

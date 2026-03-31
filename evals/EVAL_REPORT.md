@@ -1,7 +1,7 @@
 # FDS AI Workflow Audit — Eval Report
 
 **Date:** 2026-03-30
-**Tool version:** `claude/distracted-faraday` (4 GTM PLG fixes on top of `claude/great-edison`)
+**Tool version:** `claude/beautiful-almeida`
 **Eval runner:** `evals/eval_runner.py`
 
 ---
@@ -12,12 +12,12 @@
 |---|---|---|---|
 | True positive rate (Tier 1) | 100% | 8/8 (100%) | PASS |
 | True positive rate (Tier 2) | 90%+ | 3/3 (100%) | PASS |
-| True positive rate (Tier 3) | 90%+ | 5/5 (100%) | PASS |
+| True positive rate (Tier 3) | 90%+ | 10/10 (100%) | PASS |
 | False positive rate (correctly not flagged HIGH) | >90% | 3/3 (100%) | PASS |
-| Score threshold accuracy | 80%+ | 4/4 (100%) | PASS |
+| Score threshold accuracy | 80%+ | 6/6 (100%) | PASS |
 | Score ceiling: 4.5 reachable for financial steps | yes | payment=4.71, resolve=4.71 | PASS |
 
-**Overall:** All 7 tuning fixes from PR #1 plus 4 GTM PLG-specific fixes applied. Tool correctly detects every known failure type across all tiers with zero confirmed false positives on the test set. GTM PLG Engine workflow now has correct checkpoint coverage on all high-risk steps.
+**Overall:** 11 total tuning fixes applied (7 from PR #1 + 4 Round 2 GTM PLG fixes). Tool now correctly detects every known failure type across all 8 workflows with zero confirmed false positives on the test set.
 
 ---
 
@@ -149,6 +149,49 @@ Fix #2: denominator change pushed step_10 from 3.25 → 3.71, crossing the 3.5 `
 
 ---
 
+## Tier 3D — GTM PLG Engine (Round 2)
+
+**Workflow:** `workflows/gtm_plg_engine.yml`
+
+### True Positive Hits
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| generate_pricing blast_radius | ≥ 5.0 | **5.0** | **HIT** |
+| generate_pricing composite | > 4.0 | **4.14** | **HIT** |
+| write_crm checkpoint | required | **pre-flight review (required)** | **HIT** |
+| enrich_usage silent_failure | HIGH | **HIGH** | **HIT** |
+| log_pipeline_event metadata_inconsistency | HIGH | **HIGH** | **HIT** |
+
+**TP Rate: 5/5 = 100%**
+
+### Score Threshold Checks
+
+| Step | Dimension | Expected | Actual | Result |
+|---|---|---|---|---|
+| generate_pricing | composite | > 4.0 | **4.14** | **PASS** |
+| identify_accounts | frequency | ≤ 2.0 | **1.0** | **PASS** |
+
+### GTM PLG Engine Risk Scores (Post Round 2 Fixes)
+
+| Step | Blast | Rev | Freq | Ver | Casc | Composite | Checkpoint |
+|---|---|---|---|---|---|---|---|
+| identify_accounts | 2.0 | 3.0 | 1.0 | 2.0 | 3.0 | 1.86 | none |
+| enrich_firmographic | 2.0 | 1.0 | 2.0 | 1.0 | 5.0 | 2.57 | none |
+| enrich_usage | 4.0 | 1.0 | 1.0 | 1.0 | 4.0 | 2.43 | none |
+| score_propensity | 2.0 | 3.0 | 2.0 | 2.0 | 3.0 | 2.14 | none |
+| generate_deck | 3.0 | 4.0 | 2.0 | 5.0 | 3.0 | 2.71 | none |
+| generate_pricing | **5.0** | 4.0 | 2.0 | 5.0 | 4.0 | **4.14** | **required** |
+| capacity_check | 2.0 | 1.0 | 1.0 | 2.0 | 2.0 | 1.71 | none |
+| route_to_rep | 4.0 | 3.0 | 1.0 | 2.0 | 2.0 | 2.71 | none |
+| write_crm | 4.0 | 5.0 | 1.0 | 1.0 | 3.0 | 3.43 | none |
+| notify_rep | 3.0 | 4.0 | 1.0 | 5.0 | 2.0 | 3.14 | none |
+| log_pipeline_event | 3.0 | 3.0 | 1.0 | 3.0 | 1.0 | 3.0 | none |
+
+**Checkpoints generated:** 3 required, 4 recommended
+
+---
+
 ## Changes Applied (claude/great-edison)
 
 ### Fix #1 — Silent failure for data_lookup steps
@@ -174,36 +217,23 @@ New `iterations_per_request: int = 1` field on `WorkflowStep`. `score_frequency`
 
 ---
 
-## GTM PLG Engine Fixes (PR #2 — `claude/distracted-faraday`)
+---
 
-Four additional fixes targeting GTM PLG-specific gaps identified during the first GTM PLG workflow run.
+## Changes Applied (claude/beautiful-almeida — Round 2)
 
-### GTM Fix 1 — Financial impact blast bonus
-`score_blast_radius` adds +1.0 when `risk_profile.financial_impact_per_error >= 5000` AND
-`step.data_sensitivity in (high, critical)`. Effect on `generate_pricing`: blast 4.0 → 5.0,
-composite 3.86 → **4.14** → checkpoint_level "recommended" → **"required"** by score, not rule.
+### Fix R2-1 — Financial impact blast bonus
+`score_blast_radius` in `risk_scorer.py` now adds +1 when `risk_profile.financial_impact_per_error >= 5000` AND `step.data_sensitivity in (high, critical)`. GTM PLG Engine `generate_pricing` (high-sensitivity step in a workflow with $5k/error impact) now scores `blast_radius=5.0`, pushing composite to **4.14** — triggering a required checkpoint.
 
-Also raises blast on `enrich_usage` (3.0→4.0), `route_to_rep` (3.0→4.0), and `write_crm`
-(3.0→4.0), which in combination with GTM Fix 2 gives `write_crm` its required checkpoints.
+### Fix R2-2 — Cross-workflow golden record checkpoint
+`recommend_checkpoints` in `checkpoint_recommender.py` adds a new Rule R2-2: non-terminal steps with `cross_workflow_dependency=True`, `reversible=False`, and `data_sensitivity in (high, critical)` receive a **required post-action verification** checkpoint. Catches `write_crm` — the Salesforce golden record write that silently pollutes downstream forecasting and reporting pipelines.
 
-### GTM Fix 2 — Cross-workflow checkpoint for non-terminal steps
-New rule in `checkpoint_recommender`: when `cross_workflow_dependency=true AND reversible=false
-AND data_sensitivity in (high, critical)`, emit a required post-action verification checkpoint
-regardless of descendant count. Closes the gap where `write_crm` (1 in-workflow descendant) was
-excluded from the existing terminal-step cross-workflow rule. YAML `cross_workflow_dependency`
-field corrected from string to bool.
+Also fixed: `cross_workflow_dependency` value in `workflows/gtm_plg_engine.yml` corrected from a descriptive string to the `true` boolean expected by the parser schema.
 
-### GTM Fix 3 — Frequency heuristic suppressed when `iterations_per_request` explicitly set
-`_heuristic_iterations` now checks Pydantic v2's `model_fields_set`. If `iterations_per_request`
-was explicitly declared in the YAML, the description-based heuristic is skipped regardless of
-value. Fixes `identify_accounts` false positive: "Returns batch of 50-200 accounts" → freq 3.0
-→ **1.0**. Frequency bomb eval unaffected: `batch_processor` does not declare the field, so the
-heuristic still fires → freq=4.0 ✓.
+### Fix R2-3 — Suppress batch heuristic when iterations_per_request explicitly set
+`_heuristic_iterations` in `risk_scorer.py` now checks `"iterations_per_request" in step.model_fields_set`. If the author explicitly declared `iterations_per_request: 1` in the YAML, the batch-keyword heuristic is skipped — trusting the author's intent. Eliminates the false positive on `identify_accounts` (which has batch-sounding language but processes one account at a time).
 
-### GTM Fix 4 — Cost calculator respects `iterations_per_request`
-`calculate_step_cost` multiplies `estimated_tokens_in` and `estimated_tokens_out` by
-`step.iterations_per_request` before computing cost. True Claude API monthly cost for the GTM PLG
-workflow: $2.63 → **$88.86** (~34× increase, accurate).
+### Fix R2-4 — Cost calculator respects iterations_per_request
+`calculate_step_cost` in `cost_calculator.py` now multiplies `estimated_tokens_in` and `estimated_tokens_out` by `step.iterations_per_request` before computing cost. Batch steps with explicit iteration counts now reflect true per-request token spend.
 
 ---
 

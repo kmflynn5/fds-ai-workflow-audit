@@ -114,6 +114,34 @@ def recommend_checkpoints(
                 )
             )
 
+        # Rule R2-2: Cross-workflow golden record checkpoint
+        # Non-terminal steps that feed other workflows, are irreversible, and touch sensitive data
+        # need a required post-action verification to prevent silent corruption across systems.
+        is_non_terminal = graph.out_degree(step.id) > 0 if step.id in graph else True
+        if (
+            step.cross_workflow_dependency
+            and not step.reversible
+            and step.data_sensitivity in (DataSensitivity.high, DataSensitivity.critical)
+            and is_non_terminal
+        ):
+            step_recs.append(
+                CheckpointRecommendation(
+                    step_id=step.id,
+                    step_name=step.name,
+                    checkpoint_type=CheckpointType.post_action_verification,
+                    priority="required",
+                    rationale=(
+                        "Cross-workflow dependency with irreversible write on sensitive data; "
+                        "errors propagate silently to downstream systems"
+                    ),
+                    implementation_detail=(
+                        "Add post-write verification query to confirm record integrity before "
+                        "downstream workflows consume the data"
+                    ),
+                    estimated_daily_reviews=int(volume.requests_per_day * 0.1),
+                )
+            )
+
         # Rule 5: Periodic calibration
         if len(config.steps) > 5 and rs.composite > 2.5:
             step_recs.append(
