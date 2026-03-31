@@ -85,13 +85,16 @@ def _heuristic_iterations(step: WorkflowStep) -> int:
 
     Fix R2-3: if iterations_per_request was explicitly provided in the YAML (even as 1),
     trust that value and suppress the batch-keyword heuristic — the author is declaring
-    that this is a single-item call despite any loop-sounding description.
+    that this is a single-item call despite any loop-sounding description. Pydantic v2
+    tracks which fields were supplied via model_fields_set, so we can distinguish
+    "user wrote iterations_per_request: 1" from "field was omitted and defaulted to 1".
     """
-    # Explicit value always wins (> 1 or explicitly set to 1)
     if step.iterations_per_request > 1:
         return step.iterations_per_request
+    # If the user explicitly declared iterations_per_request: 1, trust it and skip heuristic.
     if "iterations_per_request" in step.model_fields_set:
-        return step.iterations_per_request  # author explicitly said 1; trust it
+        return 1
+    # Field was not declared — fall back to description-based heuristic.
     desc = step.description.lower()
     has_batch_signal = any(kw in desc for kw in _BATCH_KEYWORDS)
     if not has_batch_signal:
@@ -116,9 +119,9 @@ def score_blast_radius(step: WorkflowStep, risk_profile: RiskProfile) -> float:
     if _is_hidden_write(step):
         score += 1.0
     # Fix R2-1: high financial impact on sensitive data raises blast
-    if (
-        risk_profile.financial_impact_per_error >= 5000
-        and step.data_sensitivity in (DataSensitivity.high, DataSensitivity.critical)
+    if risk_profile.financial_impact_per_error >= 5000 and step.data_sensitivity in (
+        DataSensitivity.high,
+        DataSensitivity.critical,
     ):
         score += 1.0
     return min(score, 5.0)

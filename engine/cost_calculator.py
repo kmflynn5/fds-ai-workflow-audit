@@ -116,9 +116,11 @@ def calculate_step_cost(
 
     # Fix R2-4: multiply token estimates by iterations_per_request so batch steps
     # reflect their true per-request token spend (e.g. 500 iterations × 1k tokens = 500k tokens).
-    iterations = max(step.iterations_per_request, 1)
-    input_cost = (step.estimated_tokens_in * iterations / 1_000_000) * input_price
-    output_cost = (step.estimated_tokens_out * iterations / 1_000_000) * output_price
+    effective_tokens_in = step.estimated_tokens_in * step.iterations_per_request
+    effective_tokens_out = step.estimated_tokens_out * step.iterations_per_request
+
+    input_cost = (effective_tokens_in / 1_000_000) * input_price
+    output_cost = (effective_tokens_out / 1_000_000) * output_price
     cost_per_request = input_cost + output_cost
 
     daily = cost_per_request * daily_volume
@@ -129,8 +131,8 @@ def calculate_step_cost(
         step_id=step.id,
         step_name=step.name,
         model=step.model,
-        tokens_in_per_request=step.estimated_tokens_in,
-        tokens_out_per_request=step.estimated_tokens_out,
+        tokens_in_per_request=effective_tokens_in,
+        tokens_out_per_request=effective_tokens_out,
         cost_per_request=cost_per_request,
         daily_cost=daily,
         monthly_cost=monthly,
